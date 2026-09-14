@@ -1,0 +1,6 @@
+{
+  "name": "UnivFolio - 서울예술대학교 실명 포트폴리오 아카이브",
+  "description": "서울예술대학교 재학생 및 졸업 동문 전용 실명 기반 포트폴리오 아카이브 및 동문 채용·스카우트 네트워크",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
