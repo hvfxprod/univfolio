@@ -1,3 +1,4 @@
+import { ProjectLinks } from './ProjectLinks';
 import { PortfolioBlocks } from './PortfolioBlocks';
 import React, { useState } from 'react';
 import { PortfolioProject, UserProfile } from '../types';
@@ -193,64 +194,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
               </div>
             </div>
 
-            {/* External Action Links (Apple Pill Buttons) */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              {project.links.liveUrl && (
-                <a
-                  href={project.links.liveUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 bg-[#1D1D1F] hover:bg-black text-white rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  라이브 프리뷰
-                </a>
-              )}
-              {project.links.figmaUrl && (
-                <a
-                  href={project.links.figmaUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-800 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all border border-black/[0.08]"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-[#E6002D]" />
-                  Figma 원본
-                </a>
-              )}
-              {project.links.githubUrl && (
-                <a
-                  href={project.links.githubUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-800 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all border border-black/[0.08]"
-                >
-                  <Github className="w-3.5 h-3.5 text-[#1D1D1F]" />
-                  GitHub 코드
-                </a>
-              )}
-              {project.links.pdfUrl && (
-                <a
-                  href={project.links.pdfUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-800 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all border border-black/[0.08]"
-                >
-                  <FileText className="w-3.5 h-3.5 text-[#E6002D]" />
-                  기획서 PDF
-                </a>
-              )}
-              {project.links.behanceUrl && (
-                <a
-                  href={project.links.behanceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-800 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all border border-black/[0.08]"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-[#E6002D]" />
-                  Behance 아카이브
-                </a>
-              )}
-            </div>
+            <ProjectLinks project={project}/>
           </div>
 
           {/* Project Cover Presentation */}

@@ -1,8 +1,10 @@
 import React from 'react';
 import { PortfolioBlock } from '../types';
+import { VideoEmbed } from './VideoEmbed';
 
 export function PortfolioBlocks({ blocks }: { blocks: PortfolioBlock[] }) {
   return <div className="space-y-10">{blocks.map(block => {
+    if (block.type === 'video') return <VideoEmbed key={block.id} url={block.videoUrl || ''}/>;
     if (block.type === 'divider') return <hr key={block.id} className="border-neutral-200 my-12" />;
     if (block.type === 'image') return block.imageUrl ? <figure key={block.id} className="space-y-3">
       <img src={block.imageUrl} alt={block.caption || '작품 이미지'} className="w-full h-auto rounded-lg" loading="lazy" />

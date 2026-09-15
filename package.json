@@ -10,7 +10,7 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "api": "node server/index.mjs",
-    "test:api": "node --test server/api.test.mjs"
+    "test:api": "node --test server/api.test.mjs server/media.test.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

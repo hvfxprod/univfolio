@@ -109,3 +109,17 @@ API 테스트는 임시 DB에서 재시작 유지, 이미지 저장, 동시 조�
 구독 결제, 타 대학 유료 열람, 논문 임베드는 아직 기획 단계입니다.
 
 참고: https://docs.docker.com/engine/storage/volumes/ / https://nodejs.org/api/sqlite.html
+
+## 링크 버튼, 영상, 제작 기간
+
+- 에디터의 링크 버튼에서 이름과 URL을 자유롭게 추가·삭제합니다. 기존 서비스별 링크도 자동 전환합니다.
+- GitHub, RISS, YouTube, Vimeo, Figma, Behance는 도메인에 따라 아이콘/서비스 표시를 붙입니다.
+- 텍스트 본문에 YouTube/Vimeo 영상 URL만 붙여넣으면 영상 블록으로 변환합니다.
+  기존 글이 있으면 글을 보존하고 다음 위치에 영상을 추가합니다. 동영상 버튼으로 직접 추가할 수도 있습니다.
+- 영상은 공식 iframe 플레이어를 사용합니다. 원본 제공자의 비공개/도메인 제한으로 재생이 차단될 수 있으며 원본 링크를 제공합니다.
+- 하단 블록 추가 영역에서 인용문·구분선을 추가합니다.
+- 제작 기간은 브라우저 달력의 월 또는 일 단위를 선택합니다. 월→일 전환 시 해당 월 1일로 변환합니다.
+- 기존 자유 입력 제작 기간은 달력에서 새 값을 지정하기 전까지 유지됩니다.
+
+플레이어 참고: https://developers.google.com/youtube/player_parameters
+Vimeo 비공개 링크: https://help.vimeo.com/hc/en-us/articles/12426470858001-Embedded-player-displays-This-video-does-not-exist-message

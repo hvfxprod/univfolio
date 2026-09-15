@@ -23,11 +23,16 @@ test('DB persistence, concurrent updates, revisions, validation and import', asy
   try {
     await start();
     const initial=(await request()).data;
-    const project={...initial.projects[0],id:'test-project',title:'Persisted image project',revision:undefined,coverImageUrl:'data:image/png;base64,aGVsbG8='};
+    const project={...initial.projects[0],id:'test-project',title:'Persisted image project',revision:undefined,coverImageUrl:'data:image/png;base64,aGVsbG8=',actionLinks:[{id:'link-1',label:'논문',url:'https://riss.kr/'}],periodRange:{precision:'month',start:'2026-01',end:'2026-03'},blocks:[{id:'video-1',type:'video',videoUrl:'https://vimeo.com/76979871'}]};
     assert.equal((await request({action:'save',kind:'projects',item:project})).status,200);
     await stop(); await start();
     let saved=(await request()).data.projects.find(p=>p.id===project.id);
     assert.equal(saved.coverImageUrl,project.coverImageUrl);
+    assert.deepEqual(saved.actionLinks,project.actionLinks);
+    assert.deepEqual(saved.periodRange,project.periodRange);
+    assert.deepEqual(saved.blocks,project.blocks);
+    assert.equal((await request({action:'save',kind:'projects',item:{...saved,actionLinks:[{id:'bad',label:'bad',url:'javascript:alert(1)'}]}})).status,400);
+    assert.equal((await request({action:'save',kind:'projects',item:{...saved,periodRange:{precision:'month',start:'2026-12',end:'2026-01'}}})).status,400);
     const views=saved.views;
     await Promise.all(Array.from({length:10},()=>request({action:'view',id:project.id})));
     saved=(await request()).data.projects.find(p=>p.id===project.id);

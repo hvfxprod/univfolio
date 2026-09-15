@@ -1,3 +1,4 @@
+import { httpUrl, videoEmbed, validPeriod } from '../src/utils/media.mjs';
 import { createServer } from 'node:http';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, readFileSync } from 'node:fs';
@@ -27,7 +28,7 @@ if (!db.prepare("SELECT 1 FROM meta WHERE key='initialized'").get()) transaction
 const text = z.string().max(100000);
 const id = z.string().min(1).max(200);
 const profile = z.object({ id, realName:text, studentId:text, university:text, department:text, matriculationYear:text, status:z.enum(['재학생','졸업생','수료생','휴학생']), isVerified:z.boolean(), avatarUrl:text, bio:text, links:z.object({ email:text }).passthrough() }).passthrough();
-const project = z.object({ id, title:z.string().trim().min(1).max(500), subtitle:text, category:text, projectType:text, coverImageUrl:z.string().max(8000000), author:profile, createdAt:text, views:z.number().nonnegative(), likes:z.number().nonnegative(), tags:z.array(text).max(100), toolsUsed:z.array(text).max(100), period:text, teamInfo:text, summary:text, blocks:z.array(z.object({id,type:z.enum(['text','image','quote','two_column','divider']),content:text.optional(),title:text.optional(),imageUrl:z.string().max(8000000).optional(),caption:text.optional()}).passthrough()).max(200), links:z.object({}).passthrough(),comments:z.array(z.object({id,author:profile,content:text,createdAt:text})),isPublished:z.boolean(),revision:z.number().int().optional() }).passthrough();
+const project = z.object({ id, title:z.string().trim().min(1).max(500), subtitle:text, category:text, projectType:text, coverImageUrl:z.string().max(8000000), author:profile, createdAt:text, views:z.number().nonnegative(), likes:z.number().nonnegative(), tags:z.array(text).max(100), toolsUsed:z.array(text).max(100), period:text, teamInfo:text, summary:text, blocks:z.array(z.object({id,type:z.enum(['text','image','quote','two_column','divider','video']),content:text.optional(),title:text.optional(),imageUrl:z.string().max(8000000).optional(),caption:text.optional()}).passthrough()).max(200), links:z.object({}).passthrough(),comments:z.array(z.object({id,author:profile,content:text,createdAt:text})),isPublished:z.boolean(),revision:z.number().int().optional() }).passthrough();
 const job = z.object({ id,title:text,company:text,location:text,jobType:text,category:text,postedByAlumni:z.object({name:text,department:text,matriculationYear:text,currentPosition:text}),description:text,requirements:z.array(text),preferredQualifications:z.array(text),benefits:z.array(text),deadline:text,isReferralAvailable:z.boolean(),applicantsCount:z.number().nonnegative() }).passthrough();
 const scout = z.object({id,sender:profile,receiverStudentId:text,targetPortfolioId:id,targetPortfolioTitle:text,company:text,offerType:text,message:text,contactEmail:text,sentAt:text,status:z.enum(['대기중','수락','조율중'])}).passthrough();
 const schemas={projects:project,jobs:job,scouts:scout,profiles:profile};
@@ -51,7 +52,13 @@ const server = createServer(async(req,res) => {
       const {action,kind,item,id:recordId}=input;
       if(action==='save') {
         if(!schemas[kind]) fail('지원하지 않는 자료 유형입니다.');
-        const valid=schemas[kind].parse(item); const previous=get(kind,valid.id);
+        const valid=schemas[kind].parse(item);
+        if(kind === 'projects') {
+          if(valid.actionLinks !== undefined) valid.actionLinks = z.array(z.object({ id, label:z.string().trim().min(1).max(100), url:z.string().refine(value=>!!httpUrl(value)) })).max(30).parse(valid.actionLinks);
+          if(valid.periodRange !== undefined) { valid.periodRange=z.object({precision:z.enum(['month','day']),start:z.string(),end:z.string()}).parse(valid.periodRange); if(!validPeriod(valid.periodRange)) fail('제작 기간이 올바르지 않습니다.'); }
+          if(valid.blocks.some(b=>b.type==='video' && !videoEmbed(typeof b.videoUrl === 'string' ? b.videoUrl : ''))) fail('올바른 영상 주소가 필요합니다.');
+        }
+        const previous=get(kind,valid.id);
         if(kind==='projects' && previous && valid.revision!==previous.revision) fail('다른 창에서 작품이 변경되었습니다. 내용을 복사한 뒤 새로고침해 다시 편집해 주세요.',409);
         put(kind,{...valid,...(kind==='projects'&&previous ? {views:previous.views,likes:previous.likes,comments:previous.comments} : {}),revision:(previous?.revision||0)+1});
       } else if(action==='import') {

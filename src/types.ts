@@ -23,7 +23,8 @@ export interface UserProfile {
 
 export interface PortfolioBlock {
   id: string;
-  type: 'image' | 'text' | 'quote' | 'two_column' | 'divider';
+  type: 'image' | 'text' | 'quote' | 'two_column' | 'divider' | 'video';
+  videoUrl?: string;
   align?: 'left' | 'center' | 'right';
   bold?: boolean;
   title?: string;
@@ -47,6 +48,8 @@ export interface PortfolioProject {
   tags: string[];
   toolsUsed: string[];
   period: string; // e.g. 2024.03 - 2024.08
+  periodRange?: { precision: 'month' | 'day'; start: string; end: string };
+  actionLinks?: { id: string; label: string; url: string }[];
   teamInfo: string; // e.g. 개인 작업 (1인) or 3인 팀 (기획 및 디자인 리드)
   summary: string;
   blocks: PortfolioBlock[];
