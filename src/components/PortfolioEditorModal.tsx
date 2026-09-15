@@ -6,7 +6,7 @@ import { readEditorImage, safeImageUrl } from '../utils/editor';
 
 interface Props {
   isOpen: boolean; onClose: () => void; currentUser: UserProfile;
-  onSave: (project: PortfolioProject) => void; initialProject?: PortfolioProject | null;
+  onSave: (project: PortfolioProject) => Promise<void>; initialProject?: PortfolioProject | null;
 }
 const categories: PortfolioProject['category'][] = ['디지털아트','시각·모션디자인','영화·방송영상','무대·공간예술','실용음악·음향','사진·순수미술','UI/UX·소프트웨어'];
 const projectTypes: PortfolioProject['projectType'][] = ['졸업작품','캡스톤 디자인','산학협력 프로젝트','동아리/학회','개인 연구/사이드','공모전 수상작'];
@@ -71,7 +71,8 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
     [next[index], next[target]] = [next[target], next[index]]; change({ blocks: next });
   };
   const close = () => { if (!dirty || window.confirm('저장하지 않은 변경사항이 있습니다. 작성을 종료할까요?')) onClose(); };
-  const save = (published: boolean) => {
+  const save = async (published: boolean) => {
+    if (busy) return;
     setError('');
     if (!project.title.trim()) { setError('작품 제목을 입력해 주세요.'); setPreview(false); return; }
     const cover = project.coverImageUrl || project.blocks.find(b => b.type === 'image' && b.imageUrl)?.imageUrl || '';
@@ -81,8 +82,10 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
     const result = { ...project, title: project.title.trim(), coverImageUrl: cover,
       subtitle: project.subtitle.trim(), summary: project.summary.trim() || project.subtitle.trim(), isPublished: published,
       toolsUsed: tools.split(',').map(t => t.trim()).filter(Boolean), tags: tags.split(',').map(t => t.trim().replace(/^#/, '')).filter(Boolean) };
-    try { onSave(result); setDirty(false); onClose(); }
-    catch { setError('저장하지 못했습니다. 브라우저 저장 공간이 부족하거나 차단되어 있습니다. 이미지 수를 줄이거나 이미지 URL을 사용해 주세요. 작성 내용은 유지됩니다.'); }
+    setBusy(true);
+    try { await onSave(result); setDirty(false); onClose(); }
+    catch (e) { setError(e instanceof Error ? e.message : '서버 저장에 실패했습니다. 작성 내용은 유지됩니다.'); }
+    finally { setBusy(false); }
   };
   return <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="editor-title" className="fixed inset-0 z-[60] flex flex-col bg-[#f4f5f7] outline-none" onKeyDown={e => {
     if (e.key === 'Escape') { e.stopPropagation(); close(); }
@@ -112,7 +115,7 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
     </nav>}
     <input ref={picker} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={e => { if (e.target.files) void images(e.target.files); e.target.value = ''; }}/>
     <input ref={coverPicker} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e => { if (e.target.files) void images(e.target.files, true); e.target.value = ''; }}/>
-    {(error || busy) && <div role={error ? 'alert' : 'status'} className={`px-6 py-3 text-sm ${error ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>{error || '이미지를 최적화하고 있습니다…'}</div>}
+    {(error || busy) && <div role={error ? 'alert' : 'status'} className={`px-6 py-3 text-sm ${error ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>{error || '이미지 처리 또는 서버 저장 중입니다…'}</div>}
     <div className="flex-1 overflow-y-auto">
       <div className={`mx-auto max-w-[1440px] p-3 sm:p-8 grid gap-6 items-start ${preview ? '' : 'lg:grid-cols-[minmax(0,1fr)_290px]'}`}>
         <main className="bg-white min-w-0 rounded-2xl border border-neutral-200 shadow-sm overflow-hidden" onDragOver={e => { if (!preview) e.preventDefault(); }} onDrop={e => { if (!preview) { e.preventDefault(); void images(e.dataTransfer.files); } }}>
@@ -168,7 +171,7 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
             <label className="block text-xs space-y-2"><span>프로젝트 요약</span><textarea className={field} rows={3} value={project.summary} onChange={e => change({ summary: e.target.value })}/></label>
           </div>
           <details className="rounded-2xl border border-neutral-200 bg-white p-5"><summary className="cursor-pointer font-semibold text-sm">외부 링크</summary><div className="space-y-3 mt-4">{(['liveUrl','githubUrl','figmaUrl','pdfUrl','behanceUrl'] as const).map((key,i) => <label key={key} className="block text-xs space-y-2"><span>{['웹사이트','GitHub','Figma','PDF','Behance'][i]}</span><input className={field} value={project.links[key] || ''} placeholder="https://" onChange={e => change({ links: { ...project.links, [key]: e.target.value } })}/></label>)}</div></details>
-          <p className="text-xs leading-5 text-neutral-400 px-2">비공개로 저장한 작품은 내 포트폴리오에서 이어서 편집할 수 있습니다. 현재 작품과 이미지는 이 브라우저에 저장됩니다.</p>
+          <p className="text-xs leading-5 text-neutral-400 px-2">비공개로 저장한 작품은 내 포트폴리오에서 이어서 편집할 수 있습니다. 작품과 이미지는 서버 DB에 저장됩니다.</p>
         </aside>}
       </div>
     </div>

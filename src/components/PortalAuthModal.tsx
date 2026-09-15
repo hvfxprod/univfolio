@@ -7,7 +7,7 @@ interface PortalAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: UserProfile;
-  onUpdateUser: (updated: UserProfile) => void;
+  onUpdateUser: (updated: UserProfile) => Promise<void>;
 }
 
 export const PortalAuthModal: React.FC<PortalAuthModalProps> = ({
@@ -48,9 +48,9 @@ export const PortalAuthModal: React.FC<PortalAuthModalProps> = ({
     }, 800);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateUser({
+    try { await onUpdateUser({
       ...currentUser,
       realName,
       studentId,
@@ -59,7 +59,7 @@ export const PortalAuthModal: React.FC<PortalAuthModalProps> = ({
       status,
       bio,
       isVerified: true,
-    });
+    }); } catch (e) { window.alert(e instanceof Error ? e.message : '저장 실패'); return; }
     setSuccessMessage('포털 학적 인증 및 프로필 정보가 정상 저장되었습니다.');
     setTimeout(() => {
       setSuccessMessage('');
@@ -67,17 +67,17 @@ export const PortalAuthModal: React.FC<PortalAuthModalProps> = ({
     }, 700);
   };
 
-  const handlePresetSelect = (preset: UserProfile) => {
+  const handlePresetSelect = async (preset: UserProfile) => {
     setRealName(preset.realName);
     setStudentId(preset.studentId);
     setUniversity(preset.university);
     setDepartment(preset.department);
     setStatus(preset.status);
     setBio(preset.bio);
-    onUpdateUser({
+    try { await onUpdateUser({
       ...preset,
       isVerified: true,
-    });
+    }); } catch (e) { window.alert(e instanceof Error ? e.message : '저장 실패'); return; }
     setSuccessMessage(`포털 SSO 연동: '${preset.realName}' (${preset.status}) 학적 정보를 성공적으로 가져왔습니다.`);
     setTimeout(() => {
       setSuccessMessage('');
@@ -383,3 +383,4 @@ export const PortalAuthModal: React.FC<PortalAuthModalProps> = ({
     </div>
   );
 };
+

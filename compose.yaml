@@ -1,12 +1,33 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      target: runtime
     image: univfolio:local
     ports:
       - "${PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
     restart: unless-stopped
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
+  api:
+    build:
+      context: .
+      target: api
+    image: univfolio-api:local
+    volumes:
+      - univfolio_data:/data
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  univfolio_data:
+    name: univfolio_data

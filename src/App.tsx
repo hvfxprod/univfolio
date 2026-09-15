@@ -28,38 +28,19 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.university === '서울예술대학교') return parsed;
+        if (parsed.id) return { ...CURRENT_USER_DEFAULT, id: parsed.id };
       } catch {}
     }
     return CURRENT_USER_DEFAULT;
   });
 
-  // 2. Projects State (Reset if stale in localStorage)
-  const [projects, setProjects] = useState<PortfolioProject[]>(() => {
-    const saved = localStorage.getItem('seoularts_projects');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed[0]?.author?.university === '서울예술대학교') {
-          return parsed;
-        }
-      } catch {}
-    }
-    return INITIAL_PROJECTS;
-  });
-
-  // 3. Jobs State
-  const [jobs, setJobs] = useState<JobPosting[]>(() => {
-    const saved = localStorage.getItem('seoularts_jobs');
-    return saved ? JSON.parse(saved) : INITIAL_JOBS;
-  });
-
-  // 4. Scout Offers State
-  const [scoutOffers, setScoutOffers] = useState<ScoutOffer[]>(() => {
-    const saved = localStorage.getItem('seoularts_scout_offers');
-    return saved ? JSON.parse(saved) : INITIAL_SCOUT_OFFERS;
-  });
-
+  const [projects, setProjects] = useState<PortfolioProject[]>([]);
+  const [jobs, setJobs] = useState<JobPosting[]>([]);
+  const [scoutOffers, setScoutOffers] = useState<ScoutOffer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [hasLegacy, setHasLegacy] = useState(() => !!localStorage.getItem('seoularts_projects'));
   // Navigation State
   const [activeTab, setActiveTab] = useState<'explore' | 'careers' | 'my-portfolio'>('explore');
 
@@ -78,148 +59,55 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Sync to LocalStorage
-  useEffect(() => {
-    localStorage.setItem('seoularts_current_user', JSON.stringify(currentUser));
-  }, [currentUser]);
-
-  useEffect(() => {
-    localStorage.setItem('seoularts_projects', JSON.stringify(projects));
-  }, [projects]);
-
-  useEffect(() => {
-    localStorage.setItem('seoularts_jobs', JSON.stringify(jobs));
-  }, [jobs]);
-
-  useEffect(() => {
-    localStorage.setItem('seoularts_scout_offers', JSON.stringify(scoutOffers));
-  }, [scoutOffers]);
-
-  // Handler: Toggle Like
-  const handleToggleLike = (projectId: string) => {
-    setProjects((prev) =>
-      prev.map((p) => {
-        if (p.id === projectId) {
-          const isLiked = !p.likedByMe;
-          return {
-            ...p,
-            likedByMe: isLiked,
-            likes: isLiked ? p.likes + 1 : p.likes - 1,
-          };
-        }
-        return p;
-      })
-    );
-
-    // If detail modal is open for this project, update it too
-    if (selectedProject?.id === projectId) {
-      setSelectedProject((prev) =>
-        prev
-          ? {
-              ...prev,
-              likedByMe: !prev.likedByMe,
-              likes: !prev.likedByMe ? prev.likes + 1 : prev.likes - 1,
-            }
-          : null
-      );
-    }
+  const receive = (data: { projects: PortfolioProject[]; jobs: JobPosting[]; scouts: ScoutOffer[] }) => {
+    setProjects(data.projects); setJobs(data.jobs); setScoutOffers(data.scouts);
+    setSelectedProject(p => p ? data.projects.find(row => row.id === p.id) || null : null);
   };
-
-  // Handler: View count increment on project selection
+  const request = async (payload?: object) => {
+    const response = await fetch(payload ? '/api/action' : '/api/state', {
+      method: payload ? 'POST' : 'GET',
+      headers: { 'Content-Type': 'application/json', 'X-Demo-User': currentUser.id },
+      ...(payload ? { body: JSON.stringify(payload) } : {}),
+    });
+    if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || '서버에 연결할 수 없습니다.'); }
+    return response.json();
+  };
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    request().then(data => { if (!cancelled) { receive(data); setDbError(''); const saved = data.profiles.find((p: UserProfile) => p.id === currentUser.id); if (saved) setCurrentUser(saved); } })
+      .catch(e => { if (!cancelled) setDbError(e.message); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [currentUser.id]);
+  const action = async (payload: object) => { const data = await request(payload); receive(data); return data; };
+  const report = (promise: Promise<unknown>) => { void promise.catch(e => showToast(e.message)); };
+  const handleToggleLike = (id: string) => report(action({ action: 'like', id }));
   const handleSelectProject = (project: PortfolioProject) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === project.id ? { ...p, views: p.views + 1 } : p))
-    );
-    setSelectedProject({ ...project, views: project.views + 1 });
+    setSelectedProject(project); report(action({ action: 'view', id: project.id }));
   };
-
-  // Handler: Add Comment
-  const handleAddComment = (projectId: string, content: string) => {
-    const newComment = {
-      id: `c-${Date.now()}`,
-      author: currentUser,
-      content,
-      createdAt: new Date().toISOString().slice(0, 10).replace(/-/g, '.'),
-    };
-
-    setProjects((prev) =>
-      prev.map((p) =>
-        p.id === projectId ? { ...p, comments: [newComment, ...p.comments] } : p
-      )
-    );
-
-    if (selectedProject?.id === projectId) {
-      setSelectedProject((prev) =>
-        prev ? { ...prev, comments: [newComment, ...prev.comments] } : null
-      );
-    }
-
-    showToast('동문 실명 피드백이 등록되었습니다.');
+  const handleAddComment = async (id: string, content: string) => {
+    await action({ action: 'comment', id, content, author: currentUser }); showToast('피드백이 DB에 저장되었습니다.');
   };
-
-  // Handler: Save (Create or Edit) Project
-  const handleSaveProject = (project: PortfolioProject) => {
-    const exists = projects.some((p) => p.id === project.id);
-    const nextProjects = exists ? projects.map(p => p.id === project.id ? project : p) : [project, ...projects];
-    // Persist before announcing success; quota failures keep the editor open.
-    localStorage.setItem('seoularts_projects', JSON.stringify(nextProjects));
-    if (exists) {
-      setProjects((prev) => prev.map((p) => (p.id === project.id ? project : p)));
-      showToast('작품 정보가 성공적으로 수정되었습니다.');
-    } else {
-      setProjects((prev) => [project, ...prev]);
-      showToast('새 작품이 정상 등록되었습니다!');
-    }
-    setEditingProject(null);
+  const handleSaveProject = async (project: PortfolioProject) => {
+    await action({ action: 'save', kind: 'projects', item: project }); showToast('작품이 DB에 저장되었습니다.'); setEditingProject(null);
   };
-
-  // Handler: Delete Project
-  const handleDeleteProject = (projectId: string) => {
-    if (window.confirm('해당 작품을 삭제하시겠습니까?')) {
-      setProjects((prev) => prev.filter((p) => p.id !== projectId));
-      showToast('작품이 삭제되었습니다.');
-    }
+  const handleDeleteProject = (id: string) => {
+    if (window.confirm('해당 작품을 삭제하시겠습니까?')) report(action({ action: 'delete', id }).then(() => showToast('작품이 삭제되었습니다.')));
   };
-
-  // Handler: Toggle Project Publish
-  const handleTogglePublish = (projectId: string) => {
-    setProjects((prev) =>
-      prev.map((p) =>
-        p.id === projectId ? { ...p, isPublished: !p.isPublished } : p
-      )
-    );
+  const handleTogglePublish = (id: string) => report(action({ action: 'publish', id }));
+  const handleApplyJob = async (id: string, portfolioId: string) => { await action({ action: 'apply', id, portfolioId }); showToast('지원 내역이 DB에 저장되었습니다.'); };
+  const handlePostJob = async (item: JobPosting) => { await action({ action: 'save', kind: 'jobs', item }); showToast('채용 공고가 DB에 저장되었습니다.'); };
+  const handleSendScoutOffer = async (item: ScoutOffer) => { await action({ action: 'save', kind: 'scouts', item }); showToast('스카우트 제안이 DB에 저장되었습니다.'); };
+  const handleUpdateScoutStatus = (id: string, status: ScoutOffer['status']) => report(action({ action: 'scoutStatus', id, status }));
+  const importLegacy = async () => {
+    if (!window.confirm('이 브라우저의 기존 자료를 공용 서버 DB로 가져옵니다. 동일 ID의 서버 자료는 덮어쓰지 않습니다. 계속할까요?')) return;
+    setImporting(true);
+    try {
+      const data = await action({ action: 'import', projects: JSON.parse(localStorage.getItem('seoularts_projects') || '[]'), jobs: JSON.parse(localStorage.getItem('seoularts_jobs') || '[]'), scouts: JSON.parse(localStorage.getItem('seoularts_scout_offers') || '[]') });
+      showToast(`${data.imported}건을 가져왔습니다. 기존 브라우저 원본은 유지됩니다.`); setHasLegacy(false);
+    } catch(e) { showToast(e instanceof Error ? e.message : '가져오기에 실패했습니다.'); }
+    finally { setImporting(false); }
   };
-
-  // Handler: Apply to Job
-  const handleApplyJob = (jobId: string, portfolioId: string) => {
-    setJobs((prev) =>
-      prev.map((j) =>
-        j.id === jobId ? { ...j, applicantsCount: j.applicantsCount + 1 } : j
-      )
-    );
-    showToast('동문 추천 채용 지원이 완료되었습니다.');
-  };
-
-  // Handler: Post New Job
-  const handlePostJob = (newJob: JobPosting) => {
-    setJobs((prev) => [newJob, ...prev]);
-    showToast('동문 추천 채용 공고가 등록되었습니다.');
-  };
-
-  // Handler: Send Scout Offer
-  const handleSendScoutOffer = (offer: ScoutOffer) => {
-    setScoutOffers((prev) => [offer, ...prev]);
-    showToast(`${offer.sender.realName} 동문님의 스카우트 제안이 전송되었습니다.`);
-  };
-
-  // Handler: Update Scout Status
-  const handleUpdateScoutStatus = (scoutId: string, newStatus: ScoutOffer['status']) => {
-    setScoutOffers((prev) =>
-      prev.map((s) => (s.id === scoutId ? { ...s, status: newStatus } : s))
-    );
-    showToast(`스카우트 제안이 '${newStatus}'(으)로 변경되었습니다.`);
-  };
-
   // Filter projects owned by current user
   const myProjects = projects.filter(
     (p) =>
@@ -227,6 +115,7 @@ export default function App() {
       p.author.realName === currentUser.realName
   );
 
+  if (loading || dbError) return <div className="p-10 text-center"><h1 className="text-xl font-semibold">{loading ? '서버 DB를 불러오는 중입니다…' : '서버 DB에 연결하지 못했습니다.'}</h1>{dbError && <><p className="my-4">{dbError}</p><button onClick={() => window.location.reload()}>다시 시도</button></>}</div>;
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] flex flex-col selection:bg-[#E6002D] selection:text-white">
       {/* Global Navbar (Apple Glass) */}
@@ -242,6 +131,10 @@ export default function App() {
         unreadScoutCount={scoutOffers.length}
       />
 
+      <div className="bg-slate-100 px-6 py-3 text-xs text-slate-600 flex flex-wrap gap-3 items-center justify-center">
+        <span>서버 DB 저장 · 공용 데모 공간 (실제 로그인·권한 분리는 아직 미구현)</span>
+        {hasLegacy && <button disabled={importing} onClick={importLegacy} className="font-semibold underline">{importing ? '가져오는 중…' : '기존 브라우저 자료 가져오기'}</button>}
+      </div>
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab 1: Explore Showcase */}
@@ -395,7 +288,9 @@ export default function App() {
         isOpen={isPortalAuthOpen}
         onClose={() => setIsPortalAuthOpen(false)}
         currentUser={currentUser}
-        onUpdateUser={(updated) => {
+        onUpdateUser={async (updated) => {
+          await action({ action: 'save', kind: 'profiles', item: updated });
+          localStorage.setItem('seoularts_current_user', JSON.stringify({ id: updated.id, university: updated.university }));
           setCurrentUser(updated);
           showToast(`'${updated.realName}' 학우의 실명 정보가 반영되었습니다.`);
         }}

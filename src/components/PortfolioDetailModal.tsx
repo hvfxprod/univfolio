@@ -22,7 +22,7 @@ interface PortfolioDetailModalProps {
   onClose: () => void;
   currentUser: UserProfile;
   onToggleLike: (projectId: string) => void;
-  onAddComment: (projectId: string, content: string) => void;
+  onAddComment: (projectId: string, content: string) => Promise<void>;
   onOpenScoutModal: (project: PortfolioProject) => void;
 }
 
@@ -39,10 +39,10 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
 
   if (!project) return null;
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentInput.trim()) return;
-    onAddComment(project.id, commentInput.trim());
+    try { await onAddComment(project.id, commentInput.trim()); } catch (e) { window.alert(e instanceof Error ? e.message : '저장 실패'); return; }
     setCommentInput('');
   };
 

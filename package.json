@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "api": "node server/index.mjs",
+    "test:api": "node --test server/api.test.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -19,7 +21,8 @@
     "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

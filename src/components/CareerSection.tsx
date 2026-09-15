@@ -16,8 +16,8 @@ interface CareerSectionProps {
   scoutOffers: ScoutOffer[];
   currentUser: UserProfile;
   userProjects: PortfolioProject[];
-  onApplyJob: (jobId: string, portfolioId: string) => void;
-  onPostJob: (job: JobPosting) => void;
+  onApplyJob: (jobId: string, portfolioId: string) => Promise<void>;
+  onPostJob: (job: JobPosting) => Promise<void>;
   onUpdateScoutStatus: (scoutId: string, newStatus: ScoutOffer['status']) => void;
 }
 
@@ -57,10 +57,10 @@ export const CareerSection: React.FC<CareerSectionProps> = ({
     return true;
   });
 
-  const handleConfirmApply = (e: React.FormEvent) => {
+  const handleConfirmApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedJob || !selectedPortfolioId) return;
-    onApplyJob(selectedJob.id, selectedPortfolioId);
+    try { await onApplyJob(selectedJob.id, selectedPortfolioId); } catch (e) { window.alert(e instanceof Error ? e.message : '저장 실패'); return; }
     setApplySuccess(true);
     setTimeout(() => {
       setApplySuccess(false);
@@ -69,7 +69,7 @@ export const CareerSection: React.FC<CareerSectionProps> = ({
     }, 1200);
   };
 
-  const handleCreateJob = (e: React.FormEvent) => {
+  const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newCompany.trim()) return;
 
@@ -96,7 +96,7 @@ export const CareerSection: React.FC<CareerSectionProps> = ({
       applicantsCount: 0,
     };
 
-    onPostJob(job);
+    try { await onPostJob(job); } catch (e) { window.alert(e instanceof Error ? e.message : '저장 실패'); return; }
     setIsNewJobModalOpen(false);
     setSelectedJob(job);
   };

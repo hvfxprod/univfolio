@@ -7,7 +7,7 @@ interface ScoutModalProps {
   onClose: () => void;
   targetProject: PortfolioProject | null;
   currentUser: UserProfile;
-  onSendScout: (offer: ScoutOffer) => void;
+  onSendScout: (offer: ScoutOffer) => Promise<void>;
 }
 
 export const ScoutModal: React.FC<ScoutModalProps> = ({
@@ -25,7 +25,7 @@ export const ScoutModal: React.FC<ScoutModalProps> = ({
 
   if (!isOpen || !targetProject) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
@@ -43,7 +43,7 @@ export const ScoutModal: React.FC<ScoutModalProps> = ({
       status: '대기중',
     };
 
-    onSendScout(offer);
+    try { await onSendScout(offer); } catch (e) { window.alert(e instanceof Error ? e.message : '저장 실패'); return; }
     setIsSent(true);
     setTimeout(() => {
       setIsSent(false);
