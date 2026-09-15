@@ -1,8 +1,9 @@
+import { LinkPreview } from './LinkPreview';
 import { ProjectLinks } from './ProjectLinks';
 import { VideoEmbed } from './VideoEmbed';
 import { projectLinks, videoEmbed, httpUrl, validPeriod, formatPeriod } from '../utils/media.mjs';
 import React, { useEffect, useRef, useState } from 'react';
-import { X, ImagePlus, Type, Quote, Minus, ArrowUp, ArrowDown, Copy, Trash2, Eye, Pencil, Upload, Plus, Bold, AlignLeft, AlignCenter, AlignRight, Settings2, Play } from 'lucide-react';
+import { X, ImagePlus, Type, Quote, Minus, ArrowUp, ArrowDown, Copy, Trash2, Eye, Pencil, Upload, Plus, Bold, AlignLeft, AlignCenter, AlignRight, Settings2, Play, Link as LinkIcon } from 'lucide-react';
 import { PortfolioBlock, PortfolioProject, UserProfile } from '../types';
 import { PortfolioBlocks } from './PortfolioBlocks';
 import { readEditorImage, safeImageUrl } from '../utils/editor';
@@ -82,13 +83,14 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
     }
     change({ periodRange: next, period: formatPeriod(next) });
   };
-  const pasteVideo = (e: React.ClipboardEvent<HTMLTextAreaElement>, block: PortfolioBlock) => {
+  const pasteLink = (e: React.ClipboardEvent<HTMLTextAreaElement>, block: PortfolioBlock) => {
     const url = e.clipboardData.getData('text/plain').trim();
-    if (!videoEmbed(url)) return;
+    if (!httpUrl(url) || /\s/.test(url)) return;
+    const media: Partial<PortfolioBlock> = videoEmbed(url) ? { type: 'video', videoUrl: url } : { type: 'link', linkUrl: url };
     e.preventDefault();
-    if (!block.content?.trim() && !block.title?.trim()) update(block.id, { type: 'video', videoUrl: url });
+    if (!block.content?.trim() && !block.title?.trim()) update(block.id, media);
     else {
-      const next = [...project.blocks]; next.splice(next.findIndex(b => b.id === block.id) + 1, 0, { id: uid(), type: 'video', videoUrl: url });
+      const next = [...project.blocks]; next.splice(next.findIndex(b => b.id === block.id) + 1, 0, { id: uid(), type: 'link', ...media });
       change({ blocks: next });
     }
   };
@@ -101,6 +103,7 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
     if ((cover && !safeImageUrl(cover)) || project.blocks.some(b => b.type === 'image' && b.imageUrl && !safeImageUrl(b.imageUrl))) { setError('이미지 주소는 http 또는 https 주소를 입력해 주세요.'); return; }
     if (!validPeriod(project.periodRange)) { setError('제작 기간을 확인해 주세요. 종료일은 시작일 이후여야 합니다.'); setSettings(true); setPreview(false); return; }
     if (project.blocks.some(b => b.type === 'video' && !videoEmbed(b.videoUrl || ''))) { setError('영상 블록에 올바른 YouTube 또는 Vimeo 주소를 입력해 주세요.'); setPreview(false); return; }
+    if (project.blocks.some(b => b.type === 'link' && !httpUrl(b.linkUrl || ''))) { setError('링크 블록에 올바른 웹 주소를 입력해 주세요.'); setPreview(false); return; }
     if ((project.actionLinks || []).some(link => !link.label.trim() || !httpUrl(link.url))) { setError('버튼 이름과 올바른 http/https 링크를 입력해 주세요.'); setSettings(true); setPreview(false); return; }
     const result = { ...project, links: {}, title: project.title.trim(), coverImageUrl: cover,
       subtitle: project.subtitle.trim(), summary: project.summary.trim() || project.subtitle.trim(), isPublished: published,
@@ -132,6 +135,7 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
       <button className={button} onClick={() => add('text')}><Type size={17}/>텍스트</button>
       <button className={button} disabled={busy} onClick={() => picker.current?.click()}><ImagePlus size={17}/>이미지 업로드</button>
       <button className={button} onClick={() => add('image')}><Plus size={16}/>이미지 URL</button>
+      <button className={button} onClick={() => add('link')}><LinkIcon size={17}/>링크 미리보기</button>
       <button className={button} onClick={() => add('video')}><Play size={17}/>동영상</button>
       <button className={`${button} lg:hidden`} onClick={() => setSettings(!settings)}><Settings2 size={17}/>작품 정보</button>
     </nav>}
@@ -151,7 +155,7 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
           {preview ? <div className="px-6 sm:px-14 pb-14">{project.coverImageUrl && <img src={project.coverImageUrl} alt="대표 이미지" className="w-full rounded-lg mb-8"/>}{project.summary && <p className="mb-10 text-neutral-600 whitespace-pre-wrap">{project.summary}</p>}<PortfolioBlocks blocks={project.blocks}/><ProjectLinks project={project}/></div> : <div className="px-3 sm:px-8 pb-10">
             {project.blocks.map((block, index) => <section key={block.id} aria-label={`본문 블록 ${index + 1}`} onFocus={() => setActive(block.id)} onClick={() => setActive(block.id)} className={`group relative rounded-xl border mb-5 p-4 sm:p-6 ${active === block.id ? 'border-[#E6002D]/40 ring-2 ring-red-50' : 'border-transparent hover:border-neutral-200'}`}>
               <div className="flex flex-wrap items-center justify-between gap-2 mb-4 text-neutral-400">
-                <span className="text-[10px] font-semibold tracking-wider">{String(index + 1).padStart(2, '0')} / {({ text: 'TEXT', image: 'IMAGE', quote: 'QUOTE', divider: 'DIVIDER', two_column: 'TEXT', video: 'VIDEO' })[block.type]}</span>
+                <span className="text-[10px] font-semibold tracking-wider">{String(index + 1).padStart(2, '0')} / {({ text: 'TEXT', image: 'IMAGE', quote: 'QUOTE', divider: 'DIVIDER', two_column: 'TEXT', video: 'VIDEO', link: 'LINK' })[block.type]}</span>
                 <div className="flex">
                   <button className={button} aria-label={`블록 ${index + 1} 위로`} disabled={index === 0} onClick={() => move(index,-1)}><ArrowUp size={14}/></button>
                   <button className={button} aria-label={`블록 ${index + 1} 아래로`} disabled={index === project.blocks.length - 1} onClick={() => move(index,1)}><ArrowDown size={14}/></button>
@@ -159,7 +163,7 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
                   <button className={button} aria-label={`블록 ${index + 1} 삭제`} onClick={() => { if ((block.content || block.imageUrl || block.title) && !window.confirm('이 블록을 삭제할까요?')) return; change({ blocks: project.blocks.filter(b => b.id !== block.id) }); }}><Trash2 size={14}/></button>
                 </div>
               </div>
-              {block.type === 'video' ? <><input aria-label={`영상 ${index + 1} URL`} className={field} value={block.videoUrl || ''} placeholder="YouTube 또는 Vimeo 링크를 붙여넣으세요" onChange={e => update(block.id, { videoUrl: e.target.value.trim() })}/><div className="mt-4"><VideoEmbed url={block.videoUrl || ''}/></div></> : block.type === 'divider' ? <hr className="my-8 border-neutral-200"/> : block.type === 'image' ? <>
+              {block.type === 'link' ? <><input aria-label={`링크 ${index + 1} URL`} className={field} value={block.linkUrl || ''} placeholder="GitHub, RISS 또는 웹페이지 링크" onChange={e => { const url = e.target.value.trim(); update(block.id, videoEmbed(url) ? {type: 'video', videoUrl: url} : {linkUrl: url}); }}/><input aria-label={`링크 ${index + 1} 제목`} className={`${field} mt-2`} value={block.title || ''} placeholder="카드 제목 (선택)" onChange={e => update(block.id,{title:e.target.value})}/><div className="mt-4"><LinkPreview url={block.linkUrl || ''} title={block.title}/></div></> : block.type === 'video' ? <><input aria-label={`영상 ${index + 1} URL`} className={field} value={block.videoUrl || ''} placeholder="YouTube 또는 Vimeo 링크를 붙여넣으세요" onChange={e => { const url = e.target.value.trim(); update(block.id, httpUrl(url) && !videoEmbed(url) ? {type:'link',linkUrl:url} : {videoUrl:url}); }}/><div className="mt-4"><VideoEmbed url={block.videoUrl || ''}/></div></> : block.type === 'divider' ? <hr className="my-8 border-neutral-200"/> : block.type === 'image' ? <>
                 {block.imageUrl && <img src={block.imageUrl} alt={block.caption || '본문 이미지'} className="w-full h-auto rounded-lg mb-4"/>}
                 <input aria-label={`이미지 ${index + 1} URL`} className={field} value={block.imageUrl?.startsWith('data:') ? '' : block.imageUrl || ''} placeholder={block.imageUrl?.startsWith('data:') ? '업로드한 이미지 · URL 입력으로 교체 가능' : 'https:// 이미지 주소'} onChange={e => update(block.id,{ imageUrl: e.target.value })}/>
                 <input aria-label={`이미지 ${index + 1} 설명`} className="w-full text-center text-xs text-neutral-500 outline-none mt-4" value={block.caption || ''} placeholder="이미지에 대한 설명을 입력하세요" onChange={e => update(block.id,{ caption: e.target.value })}/>
@@ -171,11 +175,11 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
                 </div>
                 <div className={block.type === 'quote' ? 'border-l-4 border-[#E6002D] pl-5' : ''}>
                   <input aria-label={`블록 ${index + 1} 소제목`} style={{ textAlign: block.align }} className="w-full text-2xl font-semibold outline-none mb-4 placeholder:text-neutral-300" placeholder={block.type === 'quote' ? '인용문 제목 (선택)' : '소제목을 입력하세요 (선택)'} value={block.title || ''} onChange={e => update(block.id,{ title: e.target.value })}/>
-                  <textarea onPaste={e => pasteVideo(e,block)} aria-label={`블록 ${index + 1} 본문`} style={{ textAlign: block.align, fontWeight: block.bold ? 700 : 400 }} className="w-full min-h-36 resize-y outline-none text-base leading-8 placeholder:text-neutral-300" placeholder={block.type === 'quote' ? '기억에 남기고 싶은 문장을 적어보세요.' : '작업의 배경, 과정, 그리고 결과를 자유롭게 풀어보세요.'} value={block.content || ''} onChange={e => update(block.id,{ content: e.target.value })}/>
+                  <textarea onPaste={e => pasteLink(e,block)} aria-label={`블록 ${index + 1} 본문`} style={{ textAlign: block.align, fontWeight: block.bold ? 700 : 400 }} className="w-full min-h-36 resize-y outline-none text-base leading-8 placeholder:text-neutral-300" placeholder={block.type === 'quote' ? '기억에 남기고 싶은 문장을 적어보세요.' : '작업의 배경, 과정, 그리고 결과를 자유롭게 풀어보세요.'} value={block.content || ''} onChange={e => update(block.id,{ content: e.target.value })}/>
                 </div>
               </>}
             </section>)}
-            <div className="border-2 border-dashed border-neutral-200 rounded-xl p-8 text-center"><ImagePlus className="mx-auto text-neutral-300 mb-3" size={30}/><p className="text-sm text-neutral-500">이미지를 끌어 놓거나, 이야기를 이어가세요</p><div className="flex flex-wrap justify-center gap-2 mt-4"><button className={button} onClick={() => add('text')}><Plus size={15}/>텍스트 추가</button><button className={button} disabled={busy} onClick={() => picker.current?.click()}><Upload size={15}/>이미지 선택</button><button className={button} onClick={() => add('video')}><Play size={15}/>동영상</button><button className={button} onClick={() => add('quote')}><Quote size={15}/>인용문</button><button className={button} onClick={() => add('divider')}><Minus size={15}/>구분선</button></div><p className="text-xs text-neutral-400 mt-3">JPG · PNG · WebP / 한 장당 최대 15MB</p></div>
+            <div className="border-2 border-dashed border-neutral-200 rounded-xl p-8 text-center"><ImagePlus className="mx-auto text-neutral-300 mb-3" size={30}/><p className="text-sm text-neutral-500">이미지를 끌어 놓거나, 이야기를 이어가세요</p><div className="flex flex-wrap justify-center gap-2 mt-4"><button className={button} onClick={() => add('text')}><Plus size={15}/>텍스트 추가</button><button className={button} disabled={busy} onClick={() => picker.current?.click()}><Upload size={15}/>이미지 선택</button><button className={button} onClick={() => add('video')}><Play size={15}/>동영상</button><button className={button} onClick={() => add('link')}><LinkIcon size={15}/>링크 미리보기</button><button className={button} onClick={() => add('quote')}><Quote size={15}/>인용문</button><button className={button} onClick={() => add('divider')}><Minus size={15}/>구분선</button></div><p className="text-xs text-neutral-400 mt-3">JPG · PNG · WebP / 한 장당 최대 15MB</p></div>
           </div>}
         </main>
         {!preview && <aside className={`space-y-5 ${settings ? 'block' : 'hidden lg:block'}`}>
@@ -202,7 +206,7 @@ export function PortfolioEditorModal({ isOpen, onClose, currentUser, onSave, ini
             {(project.actionLinks || []).map((link,i) => <div key={link.id} className="space-y-2 border-b pb-4">
               <input aria-label={`버튼 ${i+1} 이름`} className={field} placeholder="예: 논문 원문 보기" value={link.label} onChange={e => change({actionLinks: project.actionLinks!.map(l => l.id === link.id ? {...l,label:e.target.value} : l)})}/>
               <input aria-label={`버튼 ${i+1} 링크`} className={field} placeholder="https://" value={link.url} onChange={e => change({actionLinks: project.actionLinks!.map(l => l.id === link.id ? {...l,url:e.target.value.trim()} : l)})}/>
-              <button className={button} aria-label={`버튼 ${i+1} 삭제`} onClick={() => change({actionLinks: project.actionLinks!.filter(l => l.id !== link.id)})}><Trash2 size={14}/>삭제</button>
+              <LinkPreview url={link.url} title={link.label}/><button className={button} aria-label={`버튼 ${i+1} 삭제`} onClick={() => change({actionLinks: project.actionLinks!.filter(l => l.id !== link.id)})}><Trash2 size={14}/>삭제</button>
             </div>)}
             <button className={button} onClick={() => change({actionLinks:[...(project.actionLinks || []),{id:uid(),label:'',url:''}]})}><Plus size={15}/>링크 버튼 추가</button><ProjectLinks project={project}/>
           </section>

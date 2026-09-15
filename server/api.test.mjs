@@ -23,7 +23,7 @@ test('DB persistence, concurrent updates, revisions, validation and import', asy
   try {
     await start();
     const initial=(await request()).data;
-    const project={...initial.projects[0],id:'test-project',title:'Persisted image project',revision:undefined,coverImageUrl:'data:image/png;base64,aGVsbG8=',actionLinks:[{id:'link-1',label:'논문',url:'https://riss.kr/'}],periodRange:{precision:'month',start:'2026-01',end:'2026-03'},blocks:[{id:'video-1',type:'video',videoUrl:'https://vimeo.com/76979871'}]};
+    const project={...initial.projects[0],id:'test-project',title:'Persisted image project',revision:undefined,coverImageUrl:'data:image/png;base64,aGVsbG8=',actionLinks:[{id:'link-1',label:'논문',url:'https://riss.kr/'}],periodRange:{precision:'month',start:'2026-01',end:'2026-03'},blocks:[{id:'video-1',type:'video',videoUrl:'https://vimeo.com/76979871'},{id:'link-1',type:'link',linkUrl:'https://github.com/hvfxprod/univfolio',title:'소스코드'}]};
     assert.equal((await request({action:'save',kind:'projects',item:project})).status,200);
     await stop(); await start();
     let saved=(await request()).data.projects.find(p=>p.id===project.id);

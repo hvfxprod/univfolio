@@ -23,7 +23,8 @@ export interface UserProfile {
 
 export interface PortfolioBlock {
   id: string;
-  type: 'image' | 'text' | 'quote' | 'two_column' | 'divider' | 'video';
+  type: 'image' | 'text' | 'quote' | 'two_column' | 'divider' | 'video' | 'link';
+  linkUrl?: string;
   videoUrl?: string;
   align?: 'left' | 'center' | 'right';
   bold?: boolean;

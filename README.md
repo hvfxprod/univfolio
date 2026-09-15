@@ -123,3 +123,10 @@ API 테스트는 임시 DB에서 재시작 유지, 이미지 저장, 동시 조�
 
 플레이어 참고: https://developers.google.com/youtube/player_parameters
 Vimeo 비공개 링크: https://help.vimeo.com/hc/en-us/articles/12426470858001-Embedded-player-displays-This-video-does-not-exist-message
+
+## 일반 링크 미리보기
+
+본문에 http/https URL만 붙여넣으면 YouTube/Vimeo는 영상으로, 그 외는 링크 카드로 변환합니다.
+상·하단의 링크 미리보기 버튼으로도 추가할 수 있습니다. 버튼 설정에서도 링크 카드가 즉시 표시됩니다.
+GitHub는 저장소 경로, RISS는 서비스 이름을 기본 제목으로 표시하며 사용자가 카드 제목을 변경할 수 있습니다.
+미리보기는 URL 기반입니다. 외부 페이지의 실제 제목·썸네일·논문 초록을 자동 수집하지 않습니다.
