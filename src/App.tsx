@@ -160,6 +160,9 @@ export default function App() {
   // Handler: Save (Create or Edit) Project
   const handleSaveProject = (project: PortfolioProject) => {
     const exists = projects.some((p) => p.id === project.id);
+    const nextProjects = exists ? projects.map(p => p.id === project.id ? project : p) : [project, ...projects];
+    // Persist before announcing success; quota failures keep the editor open.
+    localStorage.setItem('seoularts_projects', JSON.stringify(nextProjects));
     if (exists) {
       setProjects((prev) => prev.map((p) => (p.id === project.id ? project : p)));
       showToast('작품 정보가 성공적으로 수정되었습니다.');
@@ -409,3 +412,4 @@ export default function App() {
     </div>
   );
 }
+

@@ -23,7 +23,9 @@ export interface UserProfile {
 
 export interface PortfolioBlock {
   id: string;
-  type: 'image' | 'text' | 'quote' | 'two_column';
+  type: 'image' | 'text' | 'quote' | 'two_column' | 'divider';
+  align?: 'left' | 'center' | 'right';
+  bold?: boolean;
   title?: string;
   content?: string;
   imageUrl?: string;

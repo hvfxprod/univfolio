@@ -1,3 +1,4 @@
+import { PortfolioBlocks } from './PortfolioBlocks';
 import React, { useState } from 'react';
 import { PortfolioProject, UserProfile } from '../types';
 import { 
@@ -275,44 +276,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
 
           {/* Dynamic Content Blocks */}
           <div className="max-w-4xl mx-auto px-6 sm:px-12 space-y-10 pb-12">
-            {project.blocks.map((block) => {
-              if (block.type === 'text') {
-                return (
-                  <div key={block.id} className="space-y-3">
-                    {block.title && (
-                      <h3 className="text-lg sm:text-xl font-semibold text-[#1D1D1F] tracking-tight">
-                        {block.title}
-                      </h3>
-                    )}
-                    <p className="text-sm sm:text-base text-neutral-700 leading-relaxed whitespace-pre-line font-normal">
-                      {block.content}
-                    </p>
-                  </div>
-                );
-              }
-
-              if (block.type === 'image' && block.imageUrl) {
-                return (
-                  <figure key={block.id} className="space-y-2">
-                    <div className="border border-black/[0.08] rounded-2xl overflow-hidden bg-neutral-50 shadow-xs">
-                      <img
-                        src={block.imageUrl}
-                        alt={block.caption || 'Project Showcase'}
-                        className="w-full h-auto object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                    {block.caption && (
-                      <figcaption className="text-xs text-neutral-400 text-center font-normal">
-                        {block.caption}
-                      </figcaption>
-                    )}
-                  </figure>
-                );
-              }
-
-              return null;
-            })}
+            <PortfolioBlocks blocks={project.blocks} />
 
             {/* Tags (Apple subtle pills) */}
             <div className="pt-6 border-t border-black/[0.06]">
@@ -472,3 +436,4 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
     </div>
   );
 };
+
