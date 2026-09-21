@@ -282,9 +282,6 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
                   <Send className="w-4 h-4" />
                   동문 다이렉트 스카우트 제안
                 </button>
-                <p className="text-[10px] text-neutral-400 text-center font-medium">
-                  서울예술대학교 창작 네트워크
-                </p>
               </div>
             </div>
           </div>
