@@ -159,7 +159,7 @@ export const ScoutModal: React.FC<ScoutModalProps> = ({
           <div className="p-3 bg-[#E6002D]/[0.03] border border-[#E6002D]/15 rounded-2xl flex items-center gap-2.5 text-xs text-neutral-700">
             <ShieldCheck className="w-4 h-4 text-[#E6002D] shrink-0" />
             <span className="font-normal">
-              서울예술대학교 인증 발송자: <strong className="text-neutral-900 font-semibold">{currentUser.realName}</strong> ({currentUser.department} • {currentUser.status})
+              제안 발송자: <strong className="text-neutral-900 font-semibold">{currentUser.realName}</strong> ({currentUser.department} • {currentUser.status})
             </span>
           </div>
 

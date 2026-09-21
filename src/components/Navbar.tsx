@@ -34,20 +34,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="bg-[#E6002D] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full tracking-wide">
-              SEOULARTS SSO
+              MEMBERS
             </span>
             <span className="hidden sm:inline text-neutral-800">
-              서울예술대학교 종합정보시스템 포털 연동 중 • 재학생 및 졸업 동문 100% 실명 보증 아카이브
+              관리자 승인 회원 전용 아카이브 · 학교 공식 DB 미연결
             </span>
             <span className="sm:hidden text-neutral-800">
-              서울예대 포털 실명 인증 (종합정보시스템 연동)
+              관리자 승인 회원 전용
             </span>
           </div>
           <button
             onClick={onOpenPortalAuth}
             className="flex items-center gap-1 text-[#E6002D] hover:text-[#C50026] text-xs font-semibold tracking-wide cursor-pointer transition-colors"
           >
-            <span>학적 인증 변경</span>
+            <span>내 프로필</span>
             <ExternalLink className="w-3 h-3" />
           </button>
         </div>
@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </span>
                 </div>
                 <p className="text-[10px] text-neutral-400 font-medium hidden sm:block">
-                  Seoul Institute of the Arts • Verified Archive
+                  Seoul Institute of the Arts • Portfolio Archive
                 </p>
               </div>
             </div>
@@ -142,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenPortalAuth}
               className="flex items-center gap-2 p-1 sm:pr-3 rounded-full bg-black/[0.03] hover:bg-black/[0.06] border border-black/[0.06] transition-all cursor-pointer active:scale-[0.98]"
-              title="서울예대 포털 실명 학적 정보"
+              title="내 프로필"
             >
               <div className="w-7 h-7 bg-[#E6002D]/10 border border-[#E6002D]/25 flex items-center justify-center text-[#E6002D] font-bold text-xs rounded-full">
                 {currentUser.realName.slice(-2)}
@@ -209,7 +209,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="py-1 px-2.5 text-neutral-600 flex items-center gap-1"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-[#E6002D]" />
-            인증
+            프로필
           </button>
         </div>
       </div>

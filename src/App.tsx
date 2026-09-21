@@ -1,3 +1,4 @@
+import { api } from './auth';
 import React, { useState, useEffect } from 'react';
 import { 
   UserProfile, 
@@ -5,12 +6,6 @@ import {
   JobPosting, 
   ScoutOffer 
 } from './types';
-import { 
-  CURRENT_USER_DEFAULT, 
-  INITIAL_PROJECTS, 
-  INITIAL_JOBS, 
-  INITIAL_SCOUT_OFFERS 
-} from './data/mockData';
 import { Navbar } from './components/Navbar';
 import { PortfolioGrid } from './components/PortfolioGrid';
 import { PortfolioDetailModal } from './components/PortfolioDetailModal';
@@ -21,19 +16,8 @@ import { CareerSection } from './components/CareerSection';
 import { MyPortfolioManager } from './components/MyPortfolioManager';
 import { ShieldCheck, Plus, CheckCircle2 } from 'lucide-react';
 
-export default function App() {
-  // 1. Current User State (Reset if stale university in localStorage)
-  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('seoularts_current_user');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.id) return { ...CURRENT_USER_DEFAULT, id: parsed.id };
-      } catch {}
-    }
-    return CURRENT_USER_DEFAULT;
-  });
-
+export default function App({initialUser,isAdmin}:{initialUser:UserProfile;isAdmin:boolean}) {
+  const [currentUser,setCurrentUser]=useState(initialUser);
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [scoutOffers, setScoutOffers] = useState<ScoutOffer[]>([]);
@@ -60,18 +44,10 @@ export default function App() {
   };
 
   const receive = (data: { projects: PortfolioProject[]; jobs: JobPosting[]; scouts: ScoutOffer[] }) => {
-    setProjects(data.projects); setJobs(data.jobs); setScoutOffers(data.scouts);
+    setProjects(data.projects); setJobs(data.jobs); setScoutOffers(data.scouts.filter(s => s.receiverUserId === currentUser.id));
     setSelectedProject(p => p ? data.projects.find(row => row.id === p.id) || null : null);
   };
-  const request = async (payload?: object) => {
-    const response = await fetch(payload ? '/api/action' : '/api/state', {
-      method: payload ? 'POST' : 'GET',
-      headers: { 'Content-Type': 'application/json', 'X-Demo-User': currentUser.id },
-      ...(payload ? { body: JSON.stringify(payload) } : {}),
-    });
-    if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || '서버에 연결할 수 없습니다.'); }
-    return response.json();
-  };
+  const request = (payload?:object) => api(payload?'action':'state',payload);
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -111,8 +87,7 @@ export default function App() {
   // Filter projects owned by current user
   const myProjects = projects.filter(
     (p) =>
-      p.author.studentId === currentUser.studentId ||
-      p.author.realName === currentUser.realName
+      p.author.id === currentUser.id
   );
 
   if (loading || dbError) return <div className="p-10 text-center"><h1 className="text-xl font-semibold">{loading ? '서버 DB를 불러오는 중입니다…' : '서버 DB에 연결하지 못했습니다.'}</h1>{dbError && <><p className="my-4">{dbError}</p><button onClick={() => window.location.reload()}>다시 시도</button></>}</div>;
@@ -132,8 +107,8 @@ export default function App() {
       />
 
       <div className="bg-slate-100 px-6 py-3 text-xs text-slate-600 flex flex-wrap gap-3 items-center justify-center">
-        <span>서버 DB 저장 · 공용 데모 공간 (실제 로그인·권한 분리는 아직 미구현)</span>
-        {hasLegacy && <button disabled={importing} onClick={importLegacy} className="font-semibold underline">{importing ? '가져오는 중…' : '기존 브라우저 자료 가져오기'}</button>}
+        <span>관리자 승인 회원 전용 · 서버 DB에 안전하게 저장됩니다.</span>
+        {isAdmin && hasLegacy && <button disabled={importing} onClick={importLegacy} className="font-semibold underline">{importing ? '가져오는 중…' : '기존 브라우저 자료 가져오기'}</button>}
       </div>
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -161,11 +136,11 @@ export default function App() {
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right hidden sm:block">
                     <span className="text-[10px] text-neutral-400 block font-medium">
-                      포털 종합정보시스템
+                      회원 전용 아카이브
                     </span>
                     <span className="text-xs font-semibold text-[#E6002D] flex items-center gap-1 justify-end">
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      학적 인증 네트워크
+                      관리자 승인 네트워크
                     </span>
                   </div>
                   <button
@@ -249,13 +224,13 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3 text-neutral-500 font-normal text-xs">
-            <span>종합정보시스템 학적 인증 연동</span>
+            <span>학교 공식 DB 미연결</span>
             <span>•</span>
             <button
               onClick={() => setIsPortalAuthOpen(true)}
               className="text-[#E6002D] hover:underline font-medium cursor-pointer"
             >
-              학적 인증 변경
+              내 프로필
             </button>
           </div>
         </div>
@@ -290,7 +265,6 @@ export default function App() {
         currentUser={currentUser}
         onUpdateUser={async (updated) => {
           await action({ action: 'save', kind: 'profiles', item: updated });
-          localStorage.setItem('seoularts_current_user', JSON.stringify({ id: updated.id, university: updated.university }));
           setCurrentUser(updated);
           showToast(`'${updated.realName}' 학우의 실명 정보가 반영되었습니다.`);
         }}

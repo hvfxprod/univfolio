@@ -189,7 +189,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
                   학적 검증
                 </span>
                 <span className="font-semibold text-[#E6002D]">
-                  서울예술대학교 인증
+                  서울예술대학교
                 </span>
               </div>
             </div>
@@ -282,7 +282,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
                   동문 다이렉트 스카우트 제안
                 </button>
                 <p className="text-[10px] text-neutral-400 text-center font-medium">
-                  서울예술대학교 실명 인증 동문 네트워크
+                  서울예술대학교 창작 네트워크
                 </p>
               </div>
             </div>

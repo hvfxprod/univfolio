@@ -20,6 +20,9 @@ services:
       context: .
       target: api
     image: univfolio-api:local
+    environment:
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     volumes:
       - univfolio_data:/data
     restart: unless-stopped

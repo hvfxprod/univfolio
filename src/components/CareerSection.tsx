@@ -111,7 +111,7 @@ export const CareerSection: React.FC<CareerSectionProps> = ({
               SEOULARTS ALUMNI
             </span>
             <span className="text-xs text-[#E6002D] font-semibold">
-              100% 서울예술대학교 실명 인증 동문 추천 네트워크
+              서울예술대학교 동문 채용 네트워크
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-semibold text-[#1D1D1F] tracking-tight">
@@ -286,7 +286,7 @@ export const CareerSection: React.FC<CareerSectionProps> = ({
                             </span>
                             <ShieldCheck className="w-3.5 h-3.5 text-[#E6002D]" />
                             <span className="text-[10px] bg-[#E6002D]/10 text-[#E6002D] font-semibold px-1.5 py-0.2 rounded-full">
-                              서울예대 인증
+                              서울예대
                             </span>
                           </div>
                           <p className="text-[11px] text-neutral-500 font-normal mt-0.5">
@@ -381,7 +381,7 @@ export const CareerSection: React.FC<CareerSectionProps> = ({
               <ShieldCheck className="w-5 h-5 text-[#E6002D] shrink-0" />
               <div>
                 <h4 className="text-xs font-semibold text-[#1D1D1F]">
-                  서울예술대학교 인증 동문 스카우트 보관함
+                  서울예술대학교 동문 스카우트 보관함
                 </h4>
                 <p className="text-[11px] text-neutral-500 font-normal">
                   현업에 진출한 동문 선배들이 공개된 실명 포트폴리오를 확인하고 직접 발송한 면접 및 커피챗 제안 목록입니다.

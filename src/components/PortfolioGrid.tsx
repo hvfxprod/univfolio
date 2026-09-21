@@ -183,7 +183,7 @@ export const PortfolioGrid: React.FC<PortfolioGridProps> = ({
       {/* Result Count Status */}
       <div className="flex items-center justify-between text-xs text-neutral-500 px-1 font-medium">
         <div>
-          서울예술대학교 인증 아카이브 총 <strong className="text-[#E6002D] font-bold">{filteredProjects.length}</strong>건
+          서울예술대학교 아카이브 총 <strong className="text-[#E6002D] font-bold">{filteredProjects.length}</strong>건
         </div>
         {(selectedCategory !== '전체' || selectedStatus !== '전체' || selectedProjectType !== '전체' || searchQuery) && (
           <button

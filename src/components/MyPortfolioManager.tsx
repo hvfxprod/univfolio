@@ -56,7 +56,7 @@ export const MyPortfolioManager: React.FC<MyPortfolioManagerProps> = ({
                 {currentUser.status}
               </span>
               <span className="text-[10px] bg-[#E6002D]/10 text-[#E6002D] font-medium px-2 py-0.5 rounded-full">
-                서울예술대학교 인증
+                서울예술대학교
               </span>
             </div>
             <p className="text-xs sm:text-sm text-neutral-500 mt-1 font-normal">

@@ -1,3 +1,5 @@
+import {DatabaseSync} from 'node:sqlite';
+import {initAuth,createAccount} from './auth.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -9,7 +11,16 @@ import { once } from 'node:events';
 test('DB persistence, concurrent updates, revisions, validation and import', async () => {
   const folder=mkdtempSync(join(tmpdir(),'univfolio-api-'));
   const port=String(19000+Math.floor(Math.random()*10000));
+  const setup=new DatabaseSync(join(folder,'db.sqlite'));initAuth(setup);
+  await createAccount(setup,{email:'admin@example.com',password:'Test-password-123',realName:'Admin',studentId:'admin',department:'운영'},true);
+  setup.close();
+  const sessions={};
   let child;
+  async function endpoint(path,payload,session) {
+    const response=await fetch(`http://127.0.0.1:${port}/api/${path}`,{method:payload?'POST':'GET',headers:{'Content-Type':'application/json',Origin:`http://127.0.0.1:${port}`,...(session?{Cookie:session.cookie,'X-CSRF-Token':session.csrf}:{})},...(payload?{body:JSON.stringify(payload)}:{})});
+    return {status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};
+  }
+
   async function start() {
     child=spawn(process.execPath,['server/index.mjs'],{env:{...process.env,API_PORT:port,DB_PATH:join(folder,'db.sqlite')},stdio:['ignore','pipe','pipe']});
     for(let i=0;i<100;i++) { if(child.exitCode!==null) throw new Error('API failed to start'); try { if((await fetch(`http://127.0.0.1:${port}/api/health`)).ok) return; } catch {} await new Promise(r=>setTimeout(r,50)); }
@@ -17,13 +28,20 @@ test('DB persistence, concurrent updates, revisions, validation and import', asy
   }
   async function stop() { const done=once(child,'exit'); child.kill(); await done; }
   async function request(payload, actor='test-user') {
-    const response=await fetch(`http://127.0.0.1:${port}/api/${payload?'action':'state'}`,{method:payload?'POST':'GET',headers:{'Content-Type':'application/json','X-Demo-User':actor},...(payload?{body:JSON.stringify(payload)}:{})});
+    const response=await fetch(`http://127.0.0.1:${port}/api/${payload?'action':'state'}`,{method:payload?'POST':'GET',headers:{'Content-Type':'application/json',Origin:`http://127.0.0.1:${port}`,Cookie:sessions[actor].cookie,'X-CSRF-Token':sessions[actor].csrf},...(payload?{body:JSON.stringify(payload)}:{})});
     return {status:response.status,data:await response.json()};
   }
   try {
     await start();
+    let login=await endpoint('auth/login',{email:'admin@example.com',password:'Test-password-123'});
+    sessions['test-user']={cookie:login.cookie,csrf:login.data.csrf};
+    await endpoint('auth/signup',{email:'other@example.com',password:'Test-password-456',realName:'Other',studentId:'20260001',department:'디지털아트'});
+    const other=(await endpoint('admin/users',undefined,sessions['test-user'])).data.users.find(u=>u.email==='other@example.com');
+    await endpoint('admin/review',{id:other.id,status:'approved'},sessions['test-user']);
+    login=await endpoint('auth/login',{email:'other@example.com',password:'Test-password-456'});
+    sessions['other-user']={cookie:login.cookie,csrf:login.data.csrf};
     const initial=(await request()).data;
-    const project={...initial.projects[0],id:'test-project',title:'Persisted image project',revision:undefined,coverImageUrl:'data:image/png;base64,aGVsbG8=',actionLinks:[{id:'link-1',label:'논문',url:'https://riss.kr/'}],periodRange:{precision:'month',start:'2026-01',end:'2026-03'},blocks:[{id:'video-1',type:'video',videoUrl:'https://vimeo.com/76979871'},{id:'link-1',type:'link',linkUrl:'https://github.com/hvfxprod/univfolio',title:'소스코드'}]};
+    const project={...initial.projects[0],id:'test-project',title:'Persisted image project',isPublished:true,revision:undefined,coverImageUrl:'data:image/png;base64,aGVsbG8=',actionLinks:[{id:'link-1',label:'논문',url:'https://riss.kr/'}],periodRange:{precision:'month',start:'2026-01',end:'2026-03'},blocks:[{id:'video-1',type:'video',videoUrl:'https://vimeo.com/76979871'},{id:'link-1',type:'link',linkUrl:'https://github.com/hvfxprod/univfolio',title:'소스코드'}]};
     assert.equal((await request({action:'save',kind:'projects',item:project})).status,200);
     await stop(); await start();
     let saved=(await request()).data.projects.find(p=>p.id===project.id);

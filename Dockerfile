@@ -3,13 +3,14 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm run lint && npm run build && npx esbuild server/index.mjs --bundle --platform=node --format=esm --outfile=server/index.bundle.mjs
+RUN npm run lint && npm run build && npx esbuild server/index.mjs --bundle --platform=node --format=esm --outfile=server/index.bundle.mjs && npx esbuild server/admin.mjs --bundle --platform=node --format=esm --outfile=server/admin.bundle.mjs
 
 FROM node:24-alpine AS api
 WORKDIR /app
 ENV NODE_ENV=production DB_PATH=/data/univfolio.sqlite API_PORT=3001
 RUN mkdir /data && chown node:node /data
 COPY --from=build /app/server/index.bundle.mjs ./index.mjs
+COPY --from=build /app/server/admin.bundle.mjs ./admin.mjs
 COPY server/seed.json ./seed.json
 USER node
 EXPOSE 3001

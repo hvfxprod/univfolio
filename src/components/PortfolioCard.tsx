@@ -80,7 +80,7 @@ export const PortfolioCard: React.FC<PortfolioCardProps> = ({
             </span>
             <ShieldCheck
               className="w-3.5 h-3.5 text-[#E6002D] shrink-0"
-              aria-label="서울예대 포털 실명 인증 학우"
+              aria-label="작품 작성자"
             />
             <span className="text-[10px] text-[#E6002D] font-medium bg-[#E6002D]/10 px-1.5 py-0.2 rounded-full shrink-0">
               {project.author.status}

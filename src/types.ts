@@ -99,6 +99,7 @@ export interface ScoutOffer {
   id: string;
   sender: UserProfile;
   receiverStudentId: string;
+  receiverUserId?: string;
   targetPortfolioId: string;
   targetPortfolioTitle: string;
   company: string;
