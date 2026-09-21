@@ -1,8 +1,10 @@
+import { Avatar } from './Avatar';
 import React from 'react';
 import { UserProfile } from '../types';
 import { 
   ShieldCheck, 
-  Plus, 
+  LogOut,
+  Settings, 
   Briefcase, 
   Layers, 
   UserCheck, 
@@ -14,7 +16,9 @@ interface NavbarProps {
   currentUser: UserProfile;
   activeTab: 'explore' | 'careers' | 'my-portfolio';
   setActiveTab: (tab: 'explore' | 'careers' | 'my-portfolio') => void;
-  onOpenUpload: () => void;
+  onLogout: () => void;
+  loggingOut: boolean;
+  onOpenAdmin?: () => void;
   onOpenPortalAuth: () => void;
   unreadScoutCount: number;
 }
@@ -23,7 +27,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   activeTab,
   setActiveTab,
-  onOpenUpload,
+  onLogout,
+  loggingOut,
+  onOpenAdmin,
   onOpenPortalAuth,
   unreadScoutCount,
 }) => {
@@ -71,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-base font-bold text-[#1D1D1F] tracking-tight">
                     UNIV<span className="text-[#E6002D]">FOLIO</span>
                   </span>
-                  <span className="text-[11px] font-semibold text-[#E6002D] bg-[#E6002D]/10 px-2 py-0.5 rounded-full border border-[#E6002D]/20">
+                  <span className="hidden xl:inline text-[11px] font-semibold text-[#E6002D] bg-[#E6002D]/10 px-2 py-0.5 rounded-full border border-[#E6002D]/20">
                     서울예술대학교
                   </span>
                 </div>
@@ -83,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Apple HIG Segmented Control Navigation */}
-          <nav className="hidden md:flex items-center bg-black/[0.05] p-1 rounded-full">
+          <nav className="hidden lg:flex items-center bg-black/[0.05] p-1 rounded-full">
             <button
               onClick={() => setActiveTab('explore')}
               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
@@ -129,15 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-2.5">
-            {/* Upload Button */}
-            <button
-              onClick={onOpenUpload}
-              className="bg-[#E6002D] hover:bg-[#D60027] text-white px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold rounded-full flex items-center gap-1.5 shadow-[0_2px_8px_rgba(230,0,45,0.2)] active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>작업 업로드</span>
-            </button>
-
+            {onOpenAdmin && <button onClick={onOpenAdmin} title="관리자 페이지" aria-label="관리자 페이지" className="p-2 rounded-full hover:bg-black/5"><Settings className="w-4 h-4" /></button>}
             {/* User Badge (Apple Pill Profile) */}
             <button
               onClick={onOpenPortalAuth}
@@ -145,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="내 프로필"
             >
               <div className="w-7 h-7 bg-[#E6002D]/10 border border-[#E6002D]/25 flex items-center justify-center text-[#E6002D] font-bold text-xs rounded-full">
-                {currentUser.realName.slice(-2)}
+                <Avatar user={currentUser} />
               </div>
               <div className="hidden lg:flex flex-col text-left">
                 <div className="flex items-center gap-1 leading-none">
@@ -158,6 +156,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {currentUser.status} • {currentUser.department}
                 </span>
               </div>
+            </button>
+
+            <button onClick={onLogout} disabled={loggingOut} title="로그아웃" aria-label="로그아웃" className="flex items-center gap-1.5 p-2 sm:px-3 rounded-full border border-black/10 text-xs hover:bg-black/5 disabled:opacity-50">
+              <LogOut className="w-4 h-4" /><span className="hidden sm:inline">{loggingOut ? '로그아웃 중…' : '로그아웃'}</span>
             </button>
 
             {/* Mobile Scout notification bell */}
@@ -174,7 +176,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Mobile Nav Tabs */}
-        <div className="flex md:hidden items-center justify-around border-t border-black/[0.06] py-2 text-xs font-medium">
+        <div className="flex lg:hidden items-center justify-around border-t border-black/[0.06] py-2 text-xs font-medium">
           <button
             onClick={() => setActiveTab('explore')}
             className={`py-1 px-2.5 rounded-full transition-colors ${

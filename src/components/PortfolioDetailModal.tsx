@@ -1,3 +1,4 @@
+import { Avatar } from './Avatar';
 import { ProjectLinks } from './ProjectLinks';
 import { PortfolioBlocks } from './PortfolioBlocks';
 import React, { useState } from 'react';
@@ -62,7 +63,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
         <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-black/[0.08] px-4 sm:px-6 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0 pr-4">
             <div className="w-9 h-9 bg-[#E6002D] text-white font-semibold text-xs flex items-center justify-center rounded-2xl shadow-xs shrink-0">
-              {project.author.realName.slice(-2)}
+              <Avatar user={project.author} />
             </div>
             <div className="truncate">
               <div className="flex items-center gap-1.5">
@@ -245,7 +246,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
             <div className="max-w-4xl mx-auto bg-white border border-black/[0.08] rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
               <div className="flex items-center gap-5 text-center sm:text-left">
                 <div className="w-16 h-16 bg-[#E6002D] text-white font-bold text-xl flex items-center justify-center rounded-3xl shadow-[0_4px_12px_rgba(230,0,45,0.25)] shrink-0">
-                  {project.author.realName.slice(-2)}
+                  <Avatar user={project.author} />
                 </div>
                 <div>
                   <div className="flex items-center justify-center sm:justify-start gap-2">
@@ -343,7 +344,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
                     className="p-4 bg-black/[0.02] border border-black/[0.06] rounded-2xl flex gap-3.5"
                   >
                     <div className="w-8 h-8 bg-[#E6002D]/10 text-[#E6002D] font-bold text-[11px] flex items-center justify-center rounded-xl shrink-0 mt-0.5">
-                      {comment.author.realName.slice(-2)}
+                      <Avatar user={comment.author} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1">

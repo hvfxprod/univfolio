@@ -28,7 +28,7 @@ if (!db.prepare("SELECT 1 FROM meta WHERE key='initialized'").get()) transaction
 });
 const text = z.string().max(100000);
 const id = z.string().min(1).max(200);
-const profile = z.object({ id, realName:text, studentId:text, university:text, department:text, matriculationYear:text, status:z.enum(['재학생','졸업생','수료생','휴학생']), isVerified:z.boolean(), avatarUrl:text, bio:text, links:z.object({ email:text }).passthrough() }).passthrough();
+const profile = z.object({ id, realName:text, studentId:text, university:text, department:text, matriculationYear:text, status:z.enum(['재학생','졸업생','수료생','휴학생']), isVerified:z.boolean(), avatarUrl:z.string().max(1000000), bio:text, links:z.object({ email:text }).passthrough() }).passthrough();
 const project = z.object({ id, title:z.string().trim().min(1).max(500), subtitle:text, category:text, projectType:text, coverImageUrl:z.string().max(8000000), author:profile, createdAt:text, views:z.number().nonnegative(), likes:z.number().nonnegative(), tags:z.array(text).max(100), toolsUsed:z.array(text).max(100), period:text, teamInfo:text, summary:text, blocks:z.array(z.object({id,type:z.enum(['text','image','quote','two_column','divider','video','link']),content:text.optional(),title:text.optional(),imageUrl:z.string().max(8000000).optional(),caption:text.optional()}).passthrough()).max(200), links:z.object({}).passthrough(),comments:z.array(z.object({id,author:profile,content:text,createdAt:text})),isPublished:z.boolean(),revision:z.number().int().optional() }).passthrough();
 const job = z.object({ id,title:text,company:text,location:text,jobType:text,category:text,postedByAlumni:z.object({name:text,department:text,matriculationYear:text,currentPosition:text}),description:text,requirements:z.array(text),preferredQualifications:z.array(text),benefits:z.array(text),deadline:text,isReferralAvailable:z.boolean(),applicantsCount:z.number().nonnegative() }).passthrough();
 const scout = z.object({id,sender:profile,receiverStudentId:text,targetPortfolioId:id,targetPortfolioTitle:text,company:text,offerType:text,message:text,contactEmail:text,sentAt:text,status:z.enum(['대기중','수락','조율중'])}).passthrough();
@@ -36,8 +36,9 @@ const schemas={projects:project,jobs:job,scouts:scout,profiles:profile};
 const auth=authService(db);
 const own=(account,p)=>account.role==='admin'||p.author.id===account.id;
 const readable=(account,p)=>p.isPublished||own(account,p);
-const publicProfile=p=>({...p,studentId:'',links:{...p.links,email:''},isVerified:false});
-const state = account => ({projects:all('projects').filter(p=>readable(account,p)).map(p=>({...p,author:own(account,p)?p.author:publicProfile(p.author),comments:p.comments.map(c=>({...c,author:publicProfile(c.author)})),likedByMe:!!db.prepare('SELECT 1 FROM likes WHERE project=? AND actor=?').get(p.id,account.id)})),jobs:all('jobs'),scouts:all('scouts').filter(s=>account.role==='admin'||s.sender.id===account.id||s.receiverUserId===account.id).map(s=>({...s,sender:publicProfile(s.sender)})),profiles:[auth.profile(account.id)]});
+const currentProfile=p=>get('profiles',p.id)||p;
+const publicProfile=p=>({...currentProfile(p),studentId:'',links:{...currentProfile(p).links,email:''},isVerified:false});
+const state = account => ({projects:all('projects').filter(p=>readable(account,p)).map(p=>({...p,author:own(account,p)?currentProfile(p.author):publicProfile(p.author),comments:p.comments.map(c=>({...c,author:publicProfile(c.author)})),likedByMe:!!db.prepare('SELECT 1 FROM likes WHERE project=? AND actor=?').get(p.id,account.id)})),jobs:all('jobs'),scouts:all('scouts').filter(s=>account.role==='admin'||s.sender.id===account.id||s.receiverUserId===account.id).map(s=>({...s,sender:publicProfile(s.sender)})),profiles:[auth.profile(account.id)]});
 async function body(req) {
   if (!(req.headers['content-type'] || '').startsWith('application/json')) fail('JSON 요청이 필요합니다.',415);
   let size=0; const chunks=[];
@@ -75,6 +76,7 @@ const server = createServer(async(req,res) => {
         const previous=get(kind,valid.id);
         if(kind==='profiles') {
           if(valid.id!==actor) fail('본인 프로필만 변경할 수 있습니다.',403);
+          if(valid.avatarUrl && !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(valid.avatarUrl) && !httpUrl(valid.avatarUrl)) fail('올바른 프로필 이미지가 필요합니다.');
           const canonical=auth.profile(actor);
           put(kind,{...canonical,bio:valid.bio,avatarUrl:valid.avatarUrl,links:{...valid.links,email:canonical.links.email}});
           return state(account);

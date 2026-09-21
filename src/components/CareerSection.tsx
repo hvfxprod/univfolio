@@ -1,3 +1,4 @@
+import { Avatar } from './Avatar';
 import React, { useState } from 'react';
 import { JobPosting, ScoutOffer, UserProfile, PortfolioProject } from '../types';
 import { 
@@ -450,7 +451,7 @@ export const CareerSection: React.FC<CareerSectionProps> = ({
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
                     <div className="flex items-center gap-2 text-xs">
                       <div className="w-6 h-6 bg-[#E6002D]/10 text-[#E6002D] font-bold text-[10px] flex items-center justify-center rounded-full">
-                        {offer.sender.realName.slice(-2)}
+                        <Avatar user={offer.sender} />
                       </div>
                       <span className="font-semibold text-[#1D1D1F]">
                         {offer.sender.realName} 동문

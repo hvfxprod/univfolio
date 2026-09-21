@@ -1,3 +1,4 @@
+import { Avatar } from './Avatar';
 import React from 'react';
 import { PortfolioProject, UserProfile, ScoutOffer } from '../types';
 import { 
@@ -44,7 +45,7 @@ export const MyPortfolioManager: React.FC<MyPortfolioManagerProps> = ({
       <div className="bg-white border border-black/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <div className="w-16 h-16 bg-[#E6002D] text-white font-bold text-xl flex items-center justify-center rounded-3xl shadow-[0_4px_12px_rgba(230,0,45,0.25)] shrink-0">
-            {currentUser.realName.slice(-2)}
+            <Avatar user={currentUser} />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -75,7 +76,7 @@ export const MyPortfolioManager: React.FC<MyPortfolioManagerProps> = ({
             onClick={onOpenPortalAuth}
             className="flex-1 md:flex-none px-4 py-2 bg-black/[0.04] hover:bg-black/[0.08] text-neutral-800 text-xs font-semibold rounded-full transition-colors cursor-pointer"
           >
-            학적 정보 확인
+            프로필 편집
           </button>
           <button
             onClick={onOpenUpload}

@@ -14,9 +14,9 @@ import { PortalAuthModal } from './components/PortalAuthModal';
 import { ScoutModal } from './components/ScoutModal';
 import { CareerSection } from './components/CareerSection';
 import { MyPortfolioManager } from './components/MyPortfolioManager';
-import { ShieldCheck, Plus, CheckCircle2 } from 'lucide-react';
+import { Plus, CheckCircle2 } from 'lucide-react';
 
-export default function App({initialUser,isAdmin}:{initialUser:UserProfile;isAdmin:boolean}) {
+export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin,onProfileUpdated}:{initialUser:UserProfile;isAdmin:boolean;onLogout:()=>void;loggingOut:boolean;onOpenAdmin:()=>void;onProfileUpdated:(user:UserProfile)=>void}) {
   const [currentUser,setCurrentUser]=useState(initialUser);
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
@@ -98,64 +98,25 @@ export default function App({initialUser,isAdmin}:{initialUser:UserProfile;isAdm
         currentUser={currentUser}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenUpload={() => {
-          setEditingProject(null);
-          setIsUploadModalOpen(true);
-        }}
+        onLogout={onLogout}
+        loggingOut={loggingOut}
+        onOpenAdmin={isAdmin ? onOpenAdmin : undefined}
         onOpenPortalAuth={() => setIsPortalAuthOpen(true)}
         unreadScoutCount={scoutOffers.length}
       />
 
-      <div className="bg-slate-100 px-6 py-3 text-xs text-slate-600 flex flex-wrap gap-3 items-center justify-center">
-        <span>관리자 승인 회원 전용 · 서버 DB에 안전하게 저장됩니다.</span>
-        {isAdmin && hasLegacy && <button disabled={importing} onClick={importLegacy} className="font-semibold underline">{importing ? '가져오는 중…' : '기존 브라우저 자료 가져오기'}</button>}
-      </div>
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab 1: Explore Showcase */}
         {activeTab === 'explore' && (
           <div className="space-y-8">
-            {/* Apple Style Section Header */}
-            <div className="bg-white/80 backdrop-blur-md border border-black/[0.08] rounded-3xl p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-5">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-2 h-2 bg-[#E6002D] rounded-full" />
-                    <span className="text-[11px] font-bold tracking-wider text-[#E6002D] uppercase">
-                      SEOUL INSTITUTE OF THE ARTS ARCHIVE
-                    </span>
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-[#1D1D1F] tracking-tight">
-                    서울예술대학교 실명 포트폴리오 아카이브
-                  </h1>
-                  <p className="text-xs sm:text-sm text-neutral-500 mt-2 max-w-2xl font-normal leading-relaxed">
-                    재학생 및 졸업 동문의 미디어아트, 디지털아트, 영상, 디자인 창작 성과를 탐색하고 문화예술계 현업 동문 리더들과 스카우트 기회를 연결합니다.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right hidden sm:block">
-                    <span className="text-[10px] text-neutral-400 block font-medium">
-                      회원 전용 아카이브
-                    </span>
-                    <span className="text-xs font-semibold text-[#E6002D] flex items-center gap-1 justify-end">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      관리자 승인 네트워크
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setEditingProject(null);
-                      setIsUploadModalOpen(true);
-                    }}
-                    className="bg-[#E6002D] hover:bg-[#D60027] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full flex items-center gap-2 shadow-[0_2px_8px_rgba(230,0,45,0.2)] active:scale-[0.98] transition-all cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>작업 업로드</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <button
+              onClick={() => { setEditingProject(null); setIsUploadModalOpen(true); }}
+              className="w-full min-h-32 sm:min-h-40 rounded-3xl bg-[#E6002D] hover:bg-[#D60027] text-white flex items-center justify-center gap-4 text-2xl sm:text-3xl font-semibold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E6002D]"
+            >
+              <Plus className="w-8 h-8 sm:w-10 sm:h-10" />
+              작업 업로드
+            </button>
 
             {/* Gallery Grid */}
             <PortfolioGrid
@@ -209,6 +170,7 @@ export default function App({initialUser,isAdmin}:{initialUser:UserProfile;isAdm
         </div>
       )}
 
+      {isAdmin && hasLegacy && <div className="text-center text-xs py-3"><button disabled={importing} onClick={importLegacy} className="underline">{importing ? '가져오는 중…' : '기존 브라우저 자료 가져오기'}</button></div>}
       {/* Footer (Minimalist Apple Style) */}
       <footer className="border-t border-black/[0.06] bg-white/70 backdrop-blur-md py-8 mt-16 text-xs text-neutral-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -264,9 +226,10 @@ export default function App({initialUser,isAdmin}:{initialUser:UserProfile;isAdm
         onClose={() => setIsPortalAuthOpen(false)}
         currentUser={currentUser}
         onUpdateUser={async (updated) => {
-          await action({ action: 'save', kind: 'profiles', item: updated });
-          setCurrentUser(updated);
-          showToast(`'${updated.realName}' 학우의 실명 정보가 반영되었습니다.`);
+          const data = await action({ action: 'save', kind: 'profiles', item: updated });
+          const saved = data.profiles.find((p:UserProfile) => p.id === currentUser.id);
+          setCurrentUser(saved); onProfileUpdated(saved);
+          showToast('프로필이 저장되었습니다.');
         }}
       />
 
