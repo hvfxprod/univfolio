@@ -1,3 +1,4 @@
+import { navigate, useRoute, tabForPath, tabPaths, openPanel, closePanel } from './utils/navigation';
 import { api } from './auth';
 import React, { useState, useEffect } from 'react';
 import { 
@@ -26,13 +27,20 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
   const [importing, setImporting] = useState(false);
   const [hasLegacy, setHasLegacy] = useState(() => !!localStorage.getItem('seoularts_projects'));
   // Navigation State
-  const [activeTab, setActiveTab] = useState<'explore' | 'careers' | 'my-portfolio'>('explore');
+  const route=useRoute();
+  const activeTab=tabForPath(route);
+  const setActiveTab=(tab:keyof typeof tabPaths)=>navigate(tabPaths[tab]);
+  const params=new URLSearchParams(route.split('?')[1] || '');
+  const projectId=params.get('project');
 
   // Modals State
-  const [selectedProject, setSelectedProject] = useState<PortfolioProject | null>(null);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<PortfolioProject | null>(null);
-  const [isPortalAuthOpen, setIsPortalAuthOpen] = useState(false);
+  const selectedProject=projects.find(p=>p.id===projectId)||null;
+  const closeProject=()=>closePanel(tabPaths[activeTab]);
+  const isUploadModalOpen=params.has('editor');
+  const editingProject=projects.find(p=>p.id===params.get('editor'))||null;
+  const isPortalAuthOpen=params.has('profile');
+  const openEditor=(project?:PortfolioProject)=>openPanel(`${tabPaths[activeTab]}?editor=${encodeURIComponent(project?.id || 'new')}`);
+  const openProfile=()=>openPanel(`${tabPaths[activeTab]}?profile=1`);
   const [scoutTargetProject, setScoutTargetProject] = useState<PortfolioProject | null>(null);
 
   // Toast State
@@ -45,7 +53,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
 
   const receive = (data: { projects: PortfolioProject[]; jobs: JobPosting[]; scouts: ScoutOffer[] }) => {
     setProjects(data.projects); setJobs(data.jobs); setScoutOffers(data.scouts.filter(s => s.receiverUserId === currentUser.id));
-    setSelectedProject(p => p ? data.projects.find(row => row.id === p.id) || null : null);
+
   };
   const request = (payload?:object) => api(payload?'action':'state',payload);
   useEffect(() => {
@@ -59,13 +67,13 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
   const report = (promise: Promise<unknown>) => { void promise.catch(e => showToast(e.message)); };
   const handleToggleLike = (id: string) => report(action({ action: 'like', id }));
   const handleSelectProject = (project: PortfolioProject) => {
-    setSelectedProject(project); report(action({ action: 'view', id: project.id }));
+    openPanel(`${tabPaths[activeTab]}?project=${encodeURIComponent(project.id)}`); report(action({ action: 'view', id: project.id }));
   };
   const handleAddComment = async (id: string, content: string) => {
     await action({ action: 'comment', id, content, author: currentUser }); showToast('피드백이 DB에 저장되었습니다.');
   };
   const handleSaveProject = async (project: PortfolioProject) => {
-    await action({ action: 'save', kind: 'projects', item: project }); showToast('작품이 DB에 저장되었습니다.'); setEditingProject(null);
+    await action({ action: 'save', kind: 'projects', item: project }); showToast('작품이 DB에 저장되었습니다.');
   };
   const handleDeleteProject = (id: string) => {
     if (window.confirm('해당 작품을 삭제하시겠습니까?')) report(action({ action: 'delete', id }).then(() => showToast('작품이 삭제되었습니다.')));
@@ -101,7 +109,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
         onLogout={onLogout}
         loggingOut={loggingOut}
         onOpenAdmin={isAdmin ? onOpenAdmin : undefined}
-        onOpenPortalAuth={() => setIsPortalAuthOpen(true)}
+        onOpenPortalAuth={openProfile}
         unreadScoutCount={scoutOffers.length}
       />
 
@@ -111,7 +119,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
         {activeTab === 'explore' && (
           <div className="space-y-8">
             <button
-              onClick={() => { setEditingProject(null); setIsUploadModalOpen(true); }}
+              onClick={() => openEditor()}
               className="w-full min-h-32 sm:min-h-40 rounded-3xl bg-[#E6002D] hover:bg-[#D60027] text-white flex items-center justify-center gap-4 text-2xl sm:text-3xl font-semibold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E6002D]"
             >
               <Plus className="w-8 h-8 sm:w-10 sm:h-10" />
@@ -146,18 +154,12 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
             currentUser={currentUser}
             myProjects={myProjects}
             scoutOffers={scoutOffers}
-            onOpenUpload={() => {
-              setEditingProject(null);
-              setIsUploadModalOpen(true);
-            }}
-            onEditProject={(project) => {
-              setEditingProject(project);
-              setIsUploadModalOpen(true);
-            }}
+            onOpenUpload={() => openEditor()}
+            onEditProject={openEditor}
             onDeleteProject={handleDeleteProject}
             onTogglePublish={handleTogglePublish}
             onSelectProject={handleSelectProject}
-            onOpenPortalAuth={() => setIsPortalAuthOpen(true)}
+            onOpenPortalAuth={openProfile}
           />
         )}
       </main>
@@ -189,7 +191,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
             <span>학교 공식 DB 미연결</span>
             <span>•</span>
             <button
-              onClick={() => setIsPortalAuthOpen(true)}
+              onClick={openProfile}
               className="text-[#E6002D] hover:underline font-medium cursor-pointer"
             >
               내 프로필
@@ -201,7 +203,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
       {/* Project Detail Showcase Modal */}
       <PortfolioDetailModal
         project={selectedProject}
-        onClose={() => setSelectedProject(null)}
+        onClose={closeProject}
         currentUser={currentUser}
         onToggleLike={handleToggleLike}
         onAddComment={handleAddComment}
@@ -211,10 +213,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
       {/* Portfolio Editor (Create / Edit) Modal */}
       <PortfolioEditorModal
         isOpen={isUploadModalOpen}
-        onClose={() => {
-          setIsUploadModalOpen(false);
-          setEditingProject(null);
-        }}
+        onClose={() => closePanel(tabPaths[activeTab])}
         currentUser={currentUser}
         onSave={handleSaveProject}
         initialProject={editingProject}
@@ -223,7 +222,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
       {/* Real-Name University Student Portal Auth Modal */}
       <PortalAuthModal
         isOpen={isPortalAuthOpen}
-        onClose={() => setIsPortalAuthOpen(false)}
+        onClose={() => closePanel(tabPaths[activeTab])}
         currentUser={currentUser}
         onUpdateUser={async (updated) => {
           const data = await action({ action: 'save', kind: 'profiles', item: updated });

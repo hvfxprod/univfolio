@@ -1,3 +1,4 @@
+import { navigate, useRoute } from '../utils/navigation';
 import React, { useEffect, useState } from 'react';
 import App from '../App';
 import { api, setCsrf } from '../auth';
@@ -5,18 +6,19 @@ import { UserProfile } from '../types';
 import { AdminPage } from './AdminPage';
 type Session = {user:UserProfile;role:string;csrf:string};
 export default function AuthGate() {
-  const [session,setSession]=useState<Session|null>(null),[loading,setLoading]=useState(true),[signup,setSignup]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState(''),[admin,setAdmin]=useState(location.pathname==='/admin');
+  const [session,setSession]=useState<Session|null>(null),[loading,setLoading]=useState(true),[signup,setSignup]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState('');
+  const route=useRoute();
+  const admin=route.split('?')[0].replace(/\/$/,'')==='/admin';
   const accept=(value:Session)=>{setCsrf(value.csrf);setSession(value);};
-  useEffect(()=>{api('auth/me').then(accept).catch(e=>{if(e.message!=='로그인이 필요합니다.') setError(e.message);}).finally(()=>setLoading(false));const expired=()=>{setCsrf('');setSession(null);setError('로그인이 만료되었습니다. 다시 로그인해 주세요.');};const pop=()=>setAdmin(location.pathname==='/admin');window.addEventListener('session-expired',expired);window.addEventListener('popstate',pop);return()=>{window.removeEventListener('session-expired',expired);window.removeEventListener('popstate',pop);};},[]);
-  const navigate=(next:boolean)=>{history.pushState({},'',next?'/admin':'/');setAdmin(next);};
+  useEffect(()=>{api('auth/me').then(accept).catch(e=>{if(e.message!=='로그인이 필요합니다.') setError(e.message);}).finally(()=>setLoading(false));const expired=()=>{setCsrf('');setSession(null);setError('로그인이 만료되었습니다. 다시 로그인해 주세요.');};window.addEventListener('session-expired',expired);return()=>{window.removeEventListener('session-expired',expired);};},[]);
   async function submit(e:React.FormEvent<HTMLFormElement>) {
     e.preventDefault();const form=e.currentTarget;const data=Object.fromEntries(new FormData(form));setError('');setMessage('');
     if(signup && data.password!==data.confirm){setError('비밀번호가 일치하지 않습니다.');return;}
     setBusy(true);try { if(signup){const result=await api('auth/signup',data);setMessage(result.message);form.reset();setSignup(false);}else accept(await api('auth/login',data)); } catch(e){setError((e as Error).message);}finally{setBusy(false);}
   }
   if(loading) return <div className="p-12 text-center">로그인 상태를 확인하고 있습니다…</div>;
-  const logout=async()=>{setBusy(true);try{await api('auth/logout',{});setSession(null);setCsrf('');setError('');navigate(false);}catch(e){setError((e as Error).message);}finally{setBusy(false);}};
-  if(session) return <>{error&&<p role="alert" className="p-3 text-red-700">{error}</p>}{admin?<><div className="max-w-6xl mx-auto px-5 pt-5 flex justify-between"><button onClick={()=>navigate(false)}>← 아카이브로 돌아가기</button><button disabled={busy} onClick={logout}>로그아웃</button></div>{session.role==='admin'?<AdminPage/>:<div className="p-12">관리자 권한이 필요합니다.</div>}</>:<App initialUser={session.user} isAdmin={session.role==='admin'} onLogout={logout} loggingOut={busy} onOpenAdmin={()=>navigate(true)} onProfileUpdated={user=>setSession({...session,user})}/>}</>;
+  const logout=async()=>{setBusy(true);try{await api('auth/logout',{});setSession(null);setCsrf('');setError('');navigate('/',true);}catch(e){setError((e as Error).message);}finally{setBusy(false);}};
+  if(session) return <>{error&&<p role="alert" className="p-3 text-red-700">{error}</p>}{admin?<><div className="max-w-6xl mx-auto px-5 pt-5 flex justify-between"><button onClick={()=>navigate('/')}>← 아카이브로 돌아가기</button><button disabled={busy} onClick={logout}>로그아웃</button></div>{session.role==='admin'?<AdminPage/>:<div className="p-12">관리자 권한이 필요합니다.</div>}</>:<App initialUser={session.user} isAdmin={session.role==='admin'} onLogout={logout} loggingOut={busy} onOpenAdmin={()=>navigate('/admin')} onProfileUpdated={user=>setSession({...session,user})}/>}</>;
   return <main className="min-h-screen bg-[#F5F5F7] flex items-center justify-center p-5"><div className="bg-white border border-neutral-200 rounded-3xl p-7 sm:p-10 w-full max-w-lg shadow-sm"><p className="font-bold tracking-wider text-[#E6002D] mb-5">UNIVFOLIO</p><h1 className="text-2xl font-semibold">{signup?'회원가입 신청':'로그인'}</h1><p className="text-sm text-neutral-500 mt-3 mb-7 leading-relaxed">서울예술대학교 창작 포트폴리오 아카이브<br/>관리자가 승인한 계정만 이용할 수 있습니다.</p><form onSubmit={submit} className="space-y-4">
     {signup&&<><Field label="이름" name="realName" maxLength={80}/><Field label="학번" name="studentId" maxLength={40}/><Field label="학과 / 전공" name="department" maxLength={100}/><Field label="입학 연도" name="matriculationYear" placeholder="예: 2026" maxLength={20}/><label className="block text-sm">학적 상태<select name="status" className="block w-full border border-neutral-300 rounded-xl p-3 mt-1">{['재학생','졸업생','수료생','휴학생'].map(v=><option key={v}>{v}</option>)}</select></label></>}
     <Field label="이메일" name="email" type="email" autoComplete="username" maxLength={254}/><Field label={signup?'비밀번호 (12자 이상)':'비밀번호'} name="password" type="password" minLength={signup?12:1} maxLength={128} autoComplete={signup?'new-password':'current-password'}/>{signup&&<Field label="비밀번호 확인" name="confirm" type="password" minLength={12} maxLength={128} autoComplete="new-password"/>}
