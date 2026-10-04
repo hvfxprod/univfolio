@@ -9,8 +9,7 @@ import {
   Briefcase, 
   Layers, 
   UserCheck, 
-  Bell, 
-  ExternalLink 
+  Bell
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -36,30 +35,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-black/[0.08] transition-all">
-      {/* Top Notice Bar (Apple-style subtle tint pill banner) */}
-      <div className="bg-[#E6002D]/[0.06] border-b border-[#E6002D]/10 text-[#E6002D] text-[11px] font-medium py-1.5 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="bg-[#E6002D] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full tracking-wide">
-              MEMBERS
-            </span>
-            <span className="hidden sm:inline text-neutral-800">
-              관리자 승인 회원 전용 아카이브
-            </span>
-            <span className="sm:hidden text-neutral-800">
-              관리자 승인 회원 전용
-            </span>
-          </div>
-          <button
-            onClick={onOpenPortalAuth}
-            className="flex items-center gap-1 text-[#E6002D] hover:text-[#C50026] text-xs font-semibold tracking-wide cursor-pointer transition-colors"
-          >
-            <span>내 프로필</span>
-            <ExternalLink className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-
       {/* Main Nav */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
