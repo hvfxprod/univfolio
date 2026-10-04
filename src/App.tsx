@@ -1,3 +1,4 @@
+import { UniversityBrand } from './components/UniversityBrand';
 import { navigate, useRoute, tabForPath, tabPaths, openPanel, closePanel, replacePanel } from './utils/navigation';
 import { api } from './auth';
 import React, { useState, useEffect } from 'react';
@@ -24,8 +25,6 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
   const [scoutOffers, setScoutOffers] = useState<ScoutOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState('');
-  const [importing, setImporting] = useState(false);
-  const [hasLegacy, setHasLegacy] = useState(() => !!localStorage.getItem('seoularts_projects'));
   // Navigation State
   const route=useRoute();
   const activeTab=tabForPath(route);
@@ -83,15 +82,6 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
   const handlePostJob = async (item: JobPosting) => { await action({ action: 'save', kind: 'jobs', item }); showToast('채용 공고가 DB에 저장되었습니다.'); };
   const handleSendScoutOffer = async (item: ScoutOffer) => { await action({ action: 'save', kind: 'scouts', item }); showToast('스카우트 제안이 DB에 저장되었습니다.'); };
   const handleUpdateScoutStatus = (id: string, status: ScoutOffer['status']) => report(action({ action: 'scoutStatus', id, status }));
-  const importLegacy = async () => {
-    if (!window.confirm('이 브라우저의 기존 자료를 공용 서버 DB로 가져옵니다. 동일 ID의 서버 자료는 덮어쓰지 않습니다. 계속할까요?')) return;
-    setImporting(true);
-    try {
-      const data = await action({ action: 'import', projects: JSON.parse(localStorage.getItem('seoularts_projects') || '[]'), jobs: JSON.parse(localStorage.getItem('seoularts_jobs') || '[]'), scouts: JSON.parse(localStorage.getItem('seoularts_scout_offers') || '[]') });
-      showToast(`${data.imported}건을 가져왔습니다. 기존 브라우저 원본은 유지됩니다.`); setHasLegacy(false);
-    } catch(e) { showToast(e instanceof Error ? e.message : '가져오기에 실패했습니다.'); }
-    finally { setImporting(false); }
-  };
   // Filter projects owned by current user
   const myProjects = projects.filter(
     (p) =>
@@ -172,24 +162,15 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
         </div>
       )}
 
-      {isAdmin && hasLegacy && <div className="text-center text-xs py-3"><button disabled={importing} onClick={importLegacy} className="underline">{importing ? '가져오는 중…' : '기존 브라우저 자료 가져오기'}</button></div>}
       {/* Footer (Minimalist Apple Style) */}
       <footer className="border-t border-black/[0.06] bg-white/70 backdrop-blur-md py-8 mt-16 text-xs text-neutral-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-lg bg-[#E6002D] text-white font-bold text-xs flex items-center justify-center shadow-xs">
-              예
-            </div>
-            <span className="font-semibold text-[#1D1D1F]">
-              SeoulArts <span className="text-[#E6002D]">Archive</span>
-            </span>
-            <span className="text-neutral-300">|</span>
+          <div className="flex flex-col lg:flex-row items-center gap-3 text-center lg:text-left">
+            <UniversityBrand />
             <span>서울예술대학교 재학생 및 졸업 동문 전용 창작 포트폴리오 아카이브</span>
           </div>
 
           <div className="flex items-center gap-3 text-neutral-500 font-normal text-xs">
-            <span>학교 공식 DB 미연결</span>
-            <span>•</span>
             <button
               onClick={openProfile}
               className="text-[#E6002D] hover:underline font-medium cursor-pointer"

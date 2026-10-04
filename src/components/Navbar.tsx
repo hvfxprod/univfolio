@@ -1,3 +1,4 @@
+import { UniversityBrand } from './UniversityBrand';
 import { Avatar } from './Avatar';
 import React from 'react';
 import { UserProfile } from '../types';
@@ -43,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               MEMBERS
             </span>
             <span className="hidden sm:inline text-neutral-800">
-              관리자 승인 회원 전용 아카이브 · 학교 공식 DB 미연결
+              관리자 승인 회원 전용 아카이브
             </span>
             <span className="sm:hidden text-neutral-800">
               관리자 승인 회원 전용
@@ -62,31 +63,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Main Nav */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo & Univ Badge */}
-          <div className="flex items-center gap-6">
-            <div 
-              onClick={() => setActiveTab('explore')}
-              className="flex items-center gap-3 cursor-pointer group"
-            >
-              {/* SeoulArts Red Emblem */}
-              <div className="w-9 h-9 bg-[#E6002D] text-white font-bold text-sm flex items-center justify-center rounded-2xl shadow-[0_2px_8px_rgba(230,0,45,0.25)] group-hover:scale-105 transition-transform">
-                <span className="tracking-tighter font-black">SIA</span>
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-bold text-[#1D1D1F] tracking-tight">
-                    UNIV<span className="text-[#E6002D]">FOLIO</span>
-                  </span>
-                  <span className="hidden xl:inline text-[11px] font-semibold text-[#E6002D] bg-[#E6002D]/10 px-2 py-0.5 rounded-full border border-[#E6002D]/20">
-                    서울예술대학교
-                  </span>
-                </div>
-                <p className="text-[10px] text-neutral-400 font-medium hidden sm:block">
-                  Seoul Institute of the Arts • Portfolio Archive
-                </p>
-              </div>
-            </div>
-          </div>
+          <button type="button" onClick={() => setActiveTab('explore')} aria-label="작품 탐색으로 이동" className="text-left cursor-pointer shrink-0">
+            <UniversityBrand />
+          </button>
 
           {/* Apple HIG Segmented Control Navigation */}
           <nav className="hidden lg:flex items-center bg-black/[0.05] p-1 rounded-full">
