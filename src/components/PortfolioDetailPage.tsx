@@ -248,17 +248,17 @@ export const PortfolioDetailPage: React.FC<PortfolioDetailPageProps> = ({
 
           {/* Author Showcase Card & Scout Action Box (Apple Squircle Card) */}
           <div className="bg-neutral-50/70 border-t border-black/[0.06] py-10 px-6 sm:px-12">
-            <div className="max-w-[800px] mx-auto bg-white border-y border-black/[0.08] py-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
-              <div className="flex items-center gap-5 text-center sm:text-left">
+            <div className="project-author-card">
+              <div className="project-author-identity">
                 <div className="w-16 h-16 bg-[#E6002D] text-white font-bold text-xl flex items-center justify-center rounded-3xl shadow-[0_4px_12px_rgba(230,0,45,0.25)] shrink-0">
                   <Avatar user={project.author} />
                 </div>
-                <div>
-                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h4 className="text-lg font-semibold text-[#1D1D1F]">
                       {project.author.realName}
                     </h4>
-                    <ShieldCheck className="w-5 h-5 text-[#E6002D]" />
+                    <ShieldCheck className="w-5 h-5 text-[#E6002D] shrink-0" />
                     <span className="text-[11px] bg-[#E6002D]/10 text-[#E6002D] font-semibold px-2 py-0.5 rounded-full">
                       {project.author.status}
                     </span>
@@ -276,19 +276,19 @@ export const PortfolioDetailPage: React.FC<PortfolioDetailPageProps> = ({
                     {project.author.contact.phone && <a href={`tel:${project.author.contact.phone.replace(/[^+0-9]/g,'')}`}>{project.author.contact.phone}</a>}
                   </div>}
                   {project.author.bio && (
-                    <p className="text-xs text-neutral-400 mt-2 max-w-md">
+                    <p className="text-xs text-neutral-500 mt-2 leading-relaxed whitespace-pre-wrap">
                       "{project.author.bio}"
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 w-full sm:w-auto shrink-0">
+              <div className="project-author-action">
                 <button
                   onClick={() => onOpenScoutModal(project)}
-                  className="w-full sm:w-auto bg-[#E6002D] hover:bg-[#D60027] text-white font-semibold text-xs px-6 py-3 rounded-full flex items-center justify-center gap-2 shadow-[0_2px_8px_rgba(230,0,45,0.25)] cursor-pointer active:scale-[0.98] transition-all"
+                  className="w-full bg-[#E6002D] hover:bg-[#D60027] text-white font-semibold text-xs px-6 py-3 rounded-full flex items-center justify-center gap-2 shadow-[0_2px_8px_rgba(230,0,45,0.25)] cursor-pointer active:scale-[0.98] transition-all"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-4 h-4 shrink-0" />
                   동문 다이렉트 스카우트 제안
                 </button>
               </div>

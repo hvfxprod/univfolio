@@ -54,3 +54,28 @@
 @media (min-width: 768px) and (max-width: 1119px) {
   .project-article-meta { margin-left: 32px; margin-right: 32px; }
 }
+.project-author-card {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 32px;
+  background: white;
+  border: 1px solid #e8e6e3;
+  border-radius: 16px;
+  overflow-wrap: anywhere;
+}
+.project-author-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  min-width: 0;
+}
+.project-author-action { min-width: 0; }
+@media (max-width: 767px) {
+  .project-author-card { grid-template-columns: minmax(0, 1fr); padding: 24px; gap: 24px; }
+  .project-author-identity { gap: 14px; }
+}
