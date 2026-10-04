@@ -10,7 +10,7 @@ import {
 } from './types';
 import { Navbar } from './components/Navbar';
 import { PortfolioGrid } from './components/PortfolioGrid';
-import { PortfolioDetailModal } from './components/PortfolioDetailModal';
+import { PortfolioDetailPage } from './components/PortfolioDetailPage';
 import { PortfolioEditorModal } from './components/PortfolioEditorModal';
 import { PortalAuthModal } from './components/PortalAuthModal';
 import { ScoutModal } from './components/ScoutModal';
@@ -104,7 +104,24 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={projectId ? 'flex-1 w-full bg-white' : 'flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'}>
+        {projectId ? (selectedProject ? (
+      <PortfolioDetailPage key={selectedProject?.id}
+        project={selectedProject}
+        onClose={closeProject}
+        currentUser={currentUser}
+        onToggleLike={handleToggleLike}
+        onAddComment={handleAddComment}
+        onOpenScoutModal={(proj) => setScoutTargetProject(proj)}
+      />
+
+        ) : (
+          <div className="py-24 px-6 text-center">
+            <h1 className="text-xl font-semibold">게시물을 찾을 수 없습니다.</h1>
+            <button onClick={closeProject} className="mt-5 text-[#E6002D] underline">목록으로 돌아가기</button>
+          </div>
+        )) : <>
+
         {/* Tab 1: Explore Showcase */}
         {activeTab === 'explore' && (
           <div className="space-y-8">
@@ -152,6 +169,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
             onOpenPortalAuth={openProfile}
           />
         )}
+        </>}
       </main>
 
       {/* Global Toast Notification (Apple Capsule Toast) */}
@@ -180,16 +198,6 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
           </div>
         </div>
       </footer>
-
-      {/* Project Detail Showcase Modal */}
-      <PortfolioDetailModal
-        project={selectedProject}
-        onClose={closeProject}
-        currentUser={currentUser}
-        onToggleLike={handleToggleLike}
-        onAddComment={handleAddComment}
-        onOpenScoutModal={(proj) => setScoutTargetProject(proj)}
-      />
 
       {/* Portfolio Editor (Create / Edit) Modal */}
       <PortfolioEditorModal

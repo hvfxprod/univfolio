@@ -1,10 +1,10 @@
 import { Avatar } from './Avatar';
 import { ProjectLinks } from './ProjectLinks';
 import { PortfolioBlocks } from './PortfolioBlocks';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PortfolioProject, UserProfile } from '../types';
 import { 
-  X, 
+  ArrowLeft, 
   Heart, 
   Share2, 
   Send, 
@@ -19,7 +19,7 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 
-interface PortfolioDetailModalProps {
+interface PortfolioDetailPageProps {
   project: PortfolioProject | null;
   onClose: () => void;
   currentUser: UserProfile;
@@ -28,7 +28,7 @@ interface PortfolioDetailModalProps {
   onOpenScoutModal: (project: PortfolioProject) => void;
 }
 
-export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
+export const PortfolioDetailPage: React.FC<PortfolioDetailPageProps> = ({
   project,
   onClose,
   currentUser,
@@ -38,6 +38,14 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
 }) => {
   const [commentInput, setCommentInput] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
+
+  useEffect(() => {
+    if (project) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      setCommentInput('');
+      setCopiedLink(false);
+    }
+  }, [project?.id]);
 
   if (!project) return null;
 
@@ -55,12 +63,12 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/40 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      {/* Modal Container (Apple Squircle Sheet) */}
-      <div className="bg-white w-full max-w-5xl min-h-screen sm:min-h-0 sm:max-h-[92vh] sm:rounded-3xl overflow-hidden flex flex-col shadow-[0_24px_48px_rgba(0,0,0,0.18)] border border-black/[0.08]">
+    <div className="w-full min-h-screen bg-white">
+      {/* Full-page project content */}
+      <div className="bg-white w-full">
         
         {/* Sticky Translucent Header Nav */}
-        <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-black/[0.08] px-4 sm:px-6 py-3.5 flex items-center justify-between">
+        <div className="bg-white border-b border-black/[0.08] px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0 pr-4">
             <div className="w-9 h-9 bg-[#E6002D] text-white font-semibold text-xs flex items-center justify-center rounded-2xl shadow-xs shrink-0">
               <Avatar user={project.author} />
@@ -123,20 +131,22 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
               )}
             </button>
 
-            {/* Close */}
+            {/* Return to the previous list or profile */}
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-black/[0.05] hover:bg-black/[0.08] flex items-center justify-center text-neutral-500 hover:text-black transition-colors cursor-pointer ml-1"
+              aria-label="목록으로 돌아가기"
+              title="목록으로 돌아가기"
+              className="px-3 h-8 gap-1.5 rounded-full bg-black/[0.05] hover:bg-black/[0.08] flex items-center justify-center text-neutral-600 hover:text-black text-xs transition-colors cursor-pointer ml-1"
             >
-              <X className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4" /><span>돌아가기</span>
             </button>
           </div>
         </div>
 
         {/* Scrollable Body */}
-        <div className="overflow-y-auto flex-1 bg-white">
+        <div className="bg-white">
           {/* Hero Header Area */}
-          <div className="px-6 sm:px-12 pt-8 pb-6 max-w-4xl mx-auto">
+          <div className="px-6 sm:px-12 pt-8 pb-6 max-w-5xl mx-auto">
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <span className="bg-[#E6002D] text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
                 {project.category}
@@ -203,12 +213,12 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
             <img
               src={project.coverImageUrl}
               alt={project.title}
-              className="w-full max-h-[640px] object-cover mx-auto"
+              className="w-full max-h-[85vh] object-contain mx-auto"
             />
           </div>
 
           {/* Executive Summary Box */}
-          <div className="max-w-4xl mx-auto px-6 sm:px-12 py-8">
+          <div className="max-w-5xl mx-auto px-6 sm:px-12 py-8">
             <div className="p-6 bg-[#E6002D]/[0.03] border border-[#E6002D]/15 rounded-2xl">
               <h3 className="text-xs font-semibold text-[#E6002D] uppercase tracking-wider mb-2">
                 Project Overview & Summary
@@ -220,7 +230,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
           </div>
 
           {/* Dynamic Content Blocks */}
-          <div className="max-w-4xl mx-auto px-6 sm:px-12 space-y-10 pb-12">
+          <div className="max-w-5xl mx-auto px-6 sm:px-12 space-y-10 pb-12">
             <PortfolioBlocks blocks={project.blocks} />
 
             {/* Tags (Apple subtle pills) */}
@@ -243,7 +253,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
 
           {/* Author Showcase Card & Scout Action Box (Apple Squircle Card) */}
           <div className="bg-neutral-50/70 border-t border-black/[0.06] py-10 px-6 sm:px-12">
-            <div className="max-w-4xl mx-auto bg-white border border-black/[0.08] rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
+            <div className="max-w-5xl mx-auto bg-white border border-black/[0.08] rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
               <div className="flex items-center gap-5 text-center sm:text-left">
                 <div className="w-16 h-16 bg-[#E6002D] text-white font-bold text-xl flex items-center justify-center rounded-3xl shadow-[0_4px_12px_rgba(230,0,45,0.25)] shrink-0">
                   <Avatar user={project.author} />
@@ -291,7 +301,7 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
           </div>
 
           {/* Real-Name Comments & Mentorship Feedback Section */}
-          <div className="max-w-4xl mx-auto px-6 sm:px-12 py-10">
+          <div className="max-w-5xl mx-auto px-6 sm:px-12 py-10">
             <div className="flex items-center gap-2 mb-6">
               <MessageSquare className="w-5 h-5 text-[#E6002D]" />
               <h3 className="text-sm font-semibold text-[#1D1D1F] tracking-tight">
