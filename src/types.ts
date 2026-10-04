@@ -12,6 +12,7 @@ export interface UserProfile {
   avatarUrl: string;
   roleOrCompany?: string; // e.g. "토스 프로덕트 디자이너" or "캡스톤 디자인 수료"
   bio: string;
+  contact?: { email: string; phone: string; isPublic: boolean };
   links: {
     github?: string;
     linkedin?: string;

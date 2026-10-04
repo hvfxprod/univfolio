@@ -37,7 +37,7 @@ const auth=authService(db);
 const own=(account,p)=>account.role==='admin'||p.author.id===account.id;
 const readable=(account,p)=>p.isPublished||own(account,p);
 const currentProfile=p=>get('profiles',p.id)||p;
-const publicProfile=p=>({...currentProfile(p),studentId:'',links:{...currentProfile(p).links,email:''},isVerified:false});
+const publicProfile=p=>({...currentProfile(p),contact:currentProfile(p).contact?.isPublic?currentProfile(p).contact:undefined,studentId:'',links:{...currentProfile(p).links,email:''},isVerified:false});
 const state = account => ({projects:all('projects').filter(p=>readable(account,p)).map(p=>({...p,author:own(account,p)?currentProfile(p.author):publicProfile(p.author),comments:p.comments.map(c=>({...c,author:publicProfile(c.author)})),likedByMe:!!db.prepare('SELECT 1 FROM likes WHERE project=? AND actor=?').get(p.id,account.id)})),jobs:all('jobs'),scouts:all('scouts').filter(s=>account.role==='admin'||s.sender.id===account.id||s.receiverUserId===account.id).map(s=>({...s,sender:publicProfile(s.sender)})),profiles:[auth.profile(account.id)]});
 async function body(req) {
   if (!(req.headers['content-type'] || '').startsWith('application/json')) fail('JSON 요청이 필요합니다.',415);
@@ -78,7 +78,14 @@ const server = createServer(async(req,res) => {
           if(valid.id!==actor) fail('본인 프로필만 변경할 수 있습니다.',403);
           if(valid.avatarUrl && !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(valid.avatarUrl) && !httpUrl(valid.avatarUrl)) fail('올바른 프로필 이미지가 필요합니다.');
           const canonical=auth.profile(actor);
-          put(kind,{...canonical,bio:valid.bio,avatarUrl:valid.avatarUrl,links:{...valid.links,email:canonical.links.email}});
+          const contact=valid.contact===undefined?canonical.contact:z.object({email:z.union([z.literal(''),z.string().email().max(254)]),phone:z.string().trim().max(40).refine(v=>!v||/^[+\d\s().-]+$/.test(v)),isPublic:z.boolean()}).strict().parse(valid.contact);
+          const links={email:canonical.links.email};
+          for(const key of ['github','linkedin','behance','website']) {
+            const value=z.string().trim().max(2000).parse(valid.links[key]||'');
+            if(value && !httpUrl(value)) fail('연락처 링크는 http 또는 https 주소여야 합니다.');
+            links[key]=value;
+          }
+          put(kind,{...canonical,bio:valid.bio,avatarUrl:valid.avatarUrl,contact,links});
           return state(account);
         }
         if(kind==='projects') {

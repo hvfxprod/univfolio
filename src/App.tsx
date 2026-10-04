@@ -1,4 +1,4 @@
-import { navigate, useRoute, tabForPath, tabPaths, openPanel, closePanel } from './utils/navigation';
+import { navigate, useRoute, tabForPath, tabPaths, openPanel, closePanel, replacePanel } from './utils/navigation';
 import { api } from './auth';
 import React, { useState, useEffect } from 'react';
 import { 
@@ -222,6 +222,13 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
       {/* Real-Name University Student Portal Auth Modal */}
       <PortalAuthModal
         isOpen={isPortalAuthOpen}
+        tab={params.get('profile')==='posts'?'posts':params.get('profile')==='contact'?'contact':'about'}
+        onTabChange={tab=>replacePanel(`${tabPaths[activeTab]}?profile=${tab}`)}
+        projects={myProjects}
+        onOpenProject={handleSelectProject}
+        onEditProject={openEditor}
+        onDeleteProject={async id=>{await action({action:'delete',id});}}
+        onTogglePublish={async id=>{await action({action:'publish',id});}}
         onClose={() => closePanel(tabPaths[activeTab])}
         currentUser={currentUser}
         onUpdateUser={async (updated) => {

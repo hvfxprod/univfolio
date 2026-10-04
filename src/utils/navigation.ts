@@ -20,6 +20,10 @@ export function closePanel(fallback: string) {
   if (typeof window.history.state?.panelParent === 'string') window.history.back();
   else navigate(fallback, true);
 }
+export function replacePanel(path: string) {
+  window.history.replaceState(window.history.state, '', path);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
 export const tabPaths = { explore: '/', careers: '/careers', 'my-portfolio': '/my-portfolio' } as const;
 export function tabForPath(path: string): keyof typeof tabPaths {
   return path.split('?')[0] === '/careers' ? 'careers' : path.split('?')[0] === '/my-portfolio' ? 'my-portfolio' : 'explore';

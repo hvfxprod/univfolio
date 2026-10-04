@@ -266,6 +266,10 @@ export const PortfolioDetailModal: React.FC<PortfolioDetailModalProps> = ({
                       {project.author.roleOrCompany}
                     </p>
                   )}
+                  {project.author.contact?.isPublic && <div className="flex flex-wrap gap-3 mt-3 text-xs text-[#7065bd]">
+                    {project.author.contact.email && <a href={`mailto:${project.author.contact.email}`}>{project.author.contact.email}</a>}
+                    {project.author.contact.phone && <a href={`tel:${project.author.contact.phone.replace(/[^+0-9]/g,'')}`}>{project.author.contact.phone}</a>}
+                  </div>}
                   {project.author.bio && (
                     <p className="text-xs text-neutral-400 mt-2 max-w-md">
                       "{project.author.bio}"
