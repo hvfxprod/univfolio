@@ -1,3 +1,4 @@
+import { ProfilePage } from './components/ProfilePage';
 import { UniversityBrand } from './components/UniversityBrand';
 import { navigate, useRoute, tabForPath, tabPaths, openPanel, closePanel, replacePanel } from './utils/navigation';
 import { api } from './auth';
@@ -38,9 +39,13 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
   const closeProject=()=>closePanel(tabPaths[activeTab]);
   const isUploadModalOpen=params.has('editor');
   const editingProject=projects.find(p=>p.id===params.get('editor'))||null;
-  const isPortalAuthOpen=params.has('profile');
+  const isPortalAuthOpen=params.has('editProfile');
+  const profileId=params.get('creator') || (params.has('profile') ? currentUser.id : null);
+  const profileUser=profileId === currentUser.id ? currentUser : projects.find(p=>p.author.id===profileId && p.isPublished)?.author;
+  const openAuthorProfile=(id:string)=>openPanel(`${tabPaths[activeTab]}?creator=${encodeURIComponent(id)}`);
+  const editProfile=(tab:'about'|'contact')=>openPanel(`${tabPaths[activeTab]}?creator=${encodeURIComponent(currentUser.id)}&editProfile=${tab}`);
   const openEditor=(project?:PortfolioProject)=>openPanel(`${tabPaths[activeTab]}?editor=${encodeURIComponent(project?.id || 'new')}`);
-  const openProfile=()=>openPanel(`${tabPaths[activeTab]}?profile=1`);
+  const openProfile=()=>openAuthorProfile(currentUser.id);
   const [scoutTargetProject, setScoutTargetProject] = useState<PortfolioProject | null>(null);
 
   // Toast State
@@ -105,10 +110,11 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
       />
 
       {/* Main Content Area */}
-      <main className={projectId ? 'flex-1 w-full bg-white' : 'flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'}>
-        {projectId ? (selectedProject ? (
+      <main className={projectId || profileId ? 'flex-1 w-full bg-white' : 'flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8'}>
+        {profileId ? (profileUser ? <ProfilePage key={profileId} user={profileUser} projects={projects} isOwner={profileId===currentUser.id} onBack={()=>closePanel(tabPaths[activeTab])} onEdit={editProfile} onUpload={()=>openEditor()} onSelectProject={handleSelectProject} onEditProject={openEditor} onDeleteProject={handleDeleteProject} onTogglePublish={handleTogglePublish}/> : <div className="p-16 text-center">프로필을 찾을 수 없습니다.<button className="block mx-auto mt-5 underline" onClick={()=>closePanel(tabPaths[activeTab])}>돌아가기</button></div>) : projectId ? (selectedProject ? (
       <PortfolioDetailPage key={selectedProject?.id}
         project={selectedProject}
+        onOpenAuthor={openAuthorProfile}
         onClose={closeProject}
         currentUser={currentUser}
         onToggleLike={handleToggleLike}
@@ -206,8 +212,8 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
       {/* Real-Name University Student Portal Auth Modal */}
       <PortalAuthModal
         isOpen={isPortalAuthOpen}
-        tab={params.get('profile')==='posts'?'posts':params.get('profile')==='contact'?'contact':'about'}
-        onTabChange={tab=>replacePanel(`${tabPaths[activeTab]}?profile=${tab}`)}
+        tab={params.get('editProfile')==='posts'?'posts':params.get('editProfile')==='contact'?'contact':'about'}
+        onTabChange={tab=>replacePanel(`${tabPaths[activeTab]}?creator=${encodeURIComponent(currentUser.id)}&editProfile=${tab}`)}
         projects={myProjects}
         onOpenProject={handleSelectProject}
         onEditProject={openEditor}

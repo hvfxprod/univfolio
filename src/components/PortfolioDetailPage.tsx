@@ -20,6 +20,7 @@ import {
 interface PortfolioDetailPageProps {
   project: PortfolioProject | null;
   onClose: () => void;
+  onOpenAuthor: (id: string) => void;
   currentUser: UserProfile;
   onToggleLike: (projectId: string) => void;
   onAddComment: (projectId: string, content: string) => Promise<void>;
@@ -29,6 +30,7 @@ interface PortfolioDetailPageProps {
 export const PortfolioDetailPage: React.FC<PortfolioDetailPageProps> = ({
   project,
   onClose,
+  onOpenAuthor,
   currentUser,
   onToggleLike,
   onAddComment,
@@ -67,7 +69,7 @@ export const PortfolioDetailPage: React.FC<PortfolioDetailPageProps> = ({
         
         {/* Sticky Translucent Header Nav */}
         <div className="max-w-[1120px] mx-auto bg-white px-5 sm:px-8 py-5 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0 pr-4">
+          <button type="button" onClick={()=>onOpenAuthor(project.author.id)} aria-label={`${project.author.realName} 프로필 보기`} className="flex items-center gap-3 min-w-0 pr-4 text-left cursor-pointer">
             <div className="w-9 h-9 bg-[#E6002D] text-white font-semibold text-xs flex items-center justify-center rounded-2xl shadow-xs shrink-0">
               <Avatar user={project.author} />
             </div>
@@ -85,7 +87,7 @@ export const PortfolioDetailPage: React.FC<PortfolioDetailPageProps> = ({
                 {project.author.department}
               </p>
             </div>
-          </div>
+          </button>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 shrink-0">
@@ -250,13 +252,13 @@ export const PortfolioDetailPage: React.FC<PortfolioDetailPageProps> = ({
           <div className="bg-neutral-50/70 border-t border-black/[0.06] py-10 px-6 sm:px-12">
             <div className="project-author-card">
               <div className="project-author-identity">
-                <div className="w-16 h-16 bg-[#E6002D] text-white font-bold text-xl flex items-center justify-center rounded-3xl shadow-[0_4px_12px_rgba(230,0,45,0.25)] shrink-0">
+                <button type="button" onClick={()=>onOpenAuthor(project.author.id)} aria-label={`${project.author.realName} 프로필 보기`} className="w-16 h-16 bg-[#E6002D] text-white font-bold text-xl flex items-center justify-center rounded-3xl shadow-[0_4px_12px_rgba(230,0,45,0.25)] shrink-0">
                   <Avatar user={project.author} />
-                </div>
+                </button>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h4 className="text-lg font-semibold text-[#1D1D1F]">
-                      {project.author.realName}
+                      <button onClick={()=>onOpenAuthor(project.author.id)} className="hover:underline cursor-pointer">{project.author.realName}</button>
                     </h4>
                     <ShieldCheck className="w-5 h-5 text-[#E6002D] shrink-0" />
                     <span className="text-[11px] bg-[#E6002D]/10 text-[#E6002D] font-semibold px-2 py-0.5 rounded-full">
