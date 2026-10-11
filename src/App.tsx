@@ -16,7 +16,7 @@ import { PortalAuthModal } from './components/PortalAuthModal';
 import { ScoutModal } from './components/ScoutModal';
 import { CareerSection } from './components/CareerSection';
 import { MyPortfolioManager } from './components/MyPortfolioManager';
-import { Plus, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin,onProfileUpdated}:{initialUser:UserProfile;isAdmin:boolean;onLogout:()=>void;loggingOut:boolean;onOpenAdmin:()=>void;onProfileUpdated:(user:UserProfile)=>void}) {
   const [currentUser,setCurrentUser]=useState(initialUser);
@@ -125,16 +125,9 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
         {/* Tab 1: Explore Showcase */}
         {activeTab === 'explore' && (
           <div className="space-y-8">
-            <button
-              onClick={() => openEditor()}
-              className="w-full min-h-32 sm:min-h-40 rounded-3xl bg-[#E6002D] hover:bg-[#D60027] text-white flex items-center justify-center gap-4 text-2xl sm:text-3xl font-semibold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E6002D]"
-            >
-              <Plus className="w-8 h-8 sm:w-10 sm:h-10" />
-              작업 업로드
-            </button>
-
             {/* Gallery Grid */}
             <PortfolioGrid
+              onOpenUpload={() => openEditor()}
               projects={projects}
               onSelectProject={handleSelectProject}
               onToggleLike={handleToggleLike}

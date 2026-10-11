@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { PortfolioProject } from '../types';
 import { PortfolioCard } from './PortfolioCard';
-import { Search, RotateCcw } from 'lucide-react';
+import { Search, RotateCcw, Plus } from 'lucide-react';
 
 interface PortfolioGridProps {
+  onOpenUpload: () => void;
   projects: PortfolioProject[];
   onSelectProject: (project: PortfolioProject) => void;
   onToggleLike: (projectId: string) => void;
@@ -23,6 +24,7 @@ const CATEGORIES = [
 export const PortfolioGrid: React.FC<PortfolioGridProps> = ({
   projects,
   onSelectProject,
+  onOpenUpload,
   onToggleLike,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState('전체');
@@ -99,11 +101,13 @@ export const PortfolioGrid: React.FC<PortfolioGridProps> = ({
       </div>
 
       {/* Secondary Filter & Search Bar (Apple Translucent Toolbar) */}
-      <div className="bg-white/90 backdrop-blur-md border border-black/[0.08] p-3 sm:p-3.5 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-white/90 backdrop-blur-md border border-black/[0.08] p-3 sm:p-3.5 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
         {/* Apple Pill Search Input */}
-        <div className="relative flex-1">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="relative min-w-0 flex-1">
           <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
+            aria-label="작품 검색"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -118,6 +122,16 @@ export const PortfolioGrid: React.FC<PortfolioGridProps> = ({
               지우기
             </button>
           )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onOpenUpload}
+          className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#E6002D] px-3 sm:px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#D60027] transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6002D]"
+        >
+          <Plus className="w-4 h-4" />
+          작업 업로드
+        </button>
         </div>
 
         {/* Filters Group */}
