@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowUpRight, Heart } from 'lucide-react';
 import { PortfolioProject } from '../types';
 
 export function recentPopularProjects(projects: PortfolioProject[], now = new Date()) {
@@ -48,11 +47,8 @@ export function TrendingBanner({ projects, onSelectProject }: {
         {project.coverImageUrl && <img src={project.coverImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-500 group-hover:scale-[1.02]" />}
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/10" />
         <div className="relative px-6 sm:px-10 py-8 max-w-3xl">
-          <h2 className="text-xs font-semibold tracking-wide text-white/80">최근 인기 작품 · 최근 30일 좋아요 TOP {items.length}</h2>
-          <p className="mt-5 text-xs font-semibold text-white/80">{project.category}</p>
-          <h3 className="mt-2 text-2xl sm:text-3xl font-semibold leading-snug line-clamp-2 break-words">{project.title}</h3>
+          <h2 className="text-2xl sm:text-3xl font-semibold leading-snug line-clamp-2 break-words">{project.title}</h2>
           <p className="mt-3 text-sm text-white/80">{project.author.realName}</p>
-          <span className="mt-4 inline-flex items-center gap-2 text-xs"><Heart className="h-4 w-4" />{project.likes.toLocaleString()}<span className="ml-3">작품 보기</span><ArrowUpRight className="h-4 w-4" /></span>
         </div>
       </button>
       </motion.div>
