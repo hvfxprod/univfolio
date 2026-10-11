@@ -10,6 +10,7 @@ import {
 } from './types';
 import { Navbar } from './components/Navbar';
 import { PortfolioGrid } from './components/PortfolioGrid';
+import { TrendingBanner } from './components/TrendingBanner';
 import { PortfolioDetailPage } from './components/PortfolioDetailPage';
 import { PortfolioEditorModal } from './components/PortfolioEditorModal';
 import { PortalAuthModal } from './components/PortalAuthModal';
@@ -125,6 +126,7 @@ export default function App({initialUser,isAdmin,onLogout,loggingOut,onOpenAdmin
         {/* Tab 1: Explore Showcase */}
         {activeTab === 'explore' && (
           <div className="space-y-8">
+            <TrendingBanner projects={projects} onSelectProject={handleSelectProject} />
             {/* Gallery Grid */}
             <PortfolioGrid
               onOpenUpload={() => openEditor()}
