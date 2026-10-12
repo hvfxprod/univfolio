@@ -1,4 +1,5 @@
 import { authService, identityProvider } from './auth.mjs';
+import { sharedProfile, sharedProjects } from './public-profile.mjs';
 import { httpUrl, videoEmbed, validPeriod } from '../src/utils/media.mjs';
 import { createServer } from 'node:http';
 import { DatabaseSync } from 'node:sqlite';
@@ -51,6 +52,15 @@ const server = createServer(async(req,res) => {
   try {
     const url=new URL(req.url,'http://localhost');
     if(req.method==='GET' && url.pathname==='/api/health') { db.prepare('SELECT 1').get(); return send(200,{ok:true}); }
+    if(req.method==='GET' && url.pathname==='/api/public/profile') {
+      const userId=id.parse(url.searchParams.get('id'));
+      const owner=db.prepare('SELECT status FROM accounts WHERE id=?').get(userId);
+      if(owner && owner.status!=='approved') fail('프로필을 찾을 수 없습니다.',404);
+      const projects=all('projects');
+      const user=get('profiles',userId) || projects.find(p=>p.author.id===userId && p.isPublished===true)?.author;
+      if(!user) fail('프로필을 찾을 수 없습니다.',404);
+      return send(200,{user:sharedProfile(user),projects:sharedProjects(projects,user)});
+    }
     const account=auth.session(req);
     if(req.method==='GET' && url.pathname==='/api/auth/me') { if(!account) fail('로그인이 필요합니다.',401); return send(200,auth.me(account)); }
     if(req.method==='POST') auth.origin(req);
